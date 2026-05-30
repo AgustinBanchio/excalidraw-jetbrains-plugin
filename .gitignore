@@ -1,0 +1,20 @@
+.gradle/
+.idea/
+.intellijPlatform/
+build/
+out/
+*.iml
+
+.kotlin/
+
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+*.log
+*.tmp
+
+!gradle/wrapper/gradle-wrapper.jar
+
+### Mac OS ###
+.DS_Store

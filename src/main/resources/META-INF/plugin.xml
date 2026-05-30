@@ -1,0 +1,21 @@
+<idea-plugin>
+    <id>com.agustinbanchio.excalidraw</id>
+    <name>Excalidraw Editor</name>
+    <vendor>Agustin Banchio</vendor>
+
+    <description><![CDATA[
+        Unofficial JCEF-backed editor for .excalidraw files.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType
+            name="Excalidraw"
+            implementationClass="com.agustinbanchio.excalidraw.file.ExcalidrawFileType"
+            fieldName="INSTANCE"
+            extensions="excalidraw"/>
+
+        <fileEditorProvider implementation="com.agustinbanchio.excalidraw.editor.ExcalidrawFileEditorProvider"/>
+    </extensions>
+</idea-plugin>
