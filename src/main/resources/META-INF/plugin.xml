@@ -4,7 +4,39 @@
     <vendor>Agustin Banchio</vendor>
 
     <description><![CDATA[
-        Unofficial JCEF-backed editor for .excalidraw files.
+        <p>
+            Excalidraw Editor is an unofficial JetBrains IDE plugin for opening and editing
+            <code>.excalidraw</code> files directly inside IntelliJ-based IDEs.
+        </p>
+
+        <p>
+            The plugin adds a custom editor tab backed by JCEF and the official
+            <code>@excalidraw/excalidraw</code> React package, so Excalidraw drawings can be
+            viewed and edited without leaving the IDE.
+        </p>
+
+        <h3>Features</h3>
+        <ul>
+            <li>Registers <code>.excalidraw</code> files as a custom file type.</li>
+            <li>Opens <code>.excalidraw</code> files in an embedded Excalidraw editor.</li>
+            <li>Loads existing Excalidraw JSON from the opened file.</li>
+            <li>Syncs scene changes back into the IDE document.</li>
+            <li>Supports normal IDE save behavior, including Save and Save All.</li>
+            <li>Bundles the Excalidraw frontend locally, with no cloud sync or collaboration dependency.</li>
+        </ul>
+
+        <h3>MVP Scope</h3>
+        <ul>
+            <li>No cloud sync.</li>
+            <li>No collaboration features.</li>
+            <li>No image export yet.</li>
+            <li>No marketplace-specific account integration.</li>
+        </ul>
+
+        <p>
+            This plugin is free, open source, and unofficial. It is not endorsed by or
+            affiliated with Excalidraw.
+        </p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
