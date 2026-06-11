@@ -22,6 +22,8 @@ import com.intellij.ui.jcef.JBCefJSQuery
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLoadHandlerAdapter
+import org.cef.handler.CefRequestHandlerAdapter
+import org.cef.network.CefRequest
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
 import javax.swing.JComponent
@@ -80,6 +82,8 @@ class ExcalidrawFileEditor(
 
     private fun setupJsBridge() {
         readyQuery.addHandler {
+            if (!isTrustedFrontend()) return@addHandler null
+
             ApplicationManager.getApplication().invokeLater {
                 pushDocumentToFrontend()
             }
@@ -87,11 +91,15 @@ class ExcalidrawFileEditor(
         }
 
         sceneChangedQuery.addHandler { payload ->
+            if (!isTrustedFrontend()) return@addHandler null
+
             applyFrontendScene(payload, saveAfterUpdate = false)
             null
         }
 
         saveQuery.addHandler { payload ->
+            if (!isTrustedFrontend()) return@addHandler null
+
             applyFrontendScene(payload, saveAfterUpdate = true)
             null
         }
@@ -99,9 +107,22 @@ class ExcalidrawFileEditor(
         browser.jbCefClient.addLoadHandler(
             object : CefLoadHandlerAdapter() {
                 override fun onLoadEnd(cefBrowser: CefBrowser, frame: CefFrame, httpStatusCode: Int) {
-                    if (!frame.isMain) return
+                    if (!frame.isMain || !ExcalidrawResourceSchemeHandlerFactory.isTrustedFrontendUrl(frame.url)) return
                     injectBridge()
                 }
+            },
+            browser.cefBrowser,
+        )
+
+        browser.jbCefClient.addRequestHandler(
+            object : CefRequestHandlerAdapter() {
+                override fun onBeforeBrowse(
+                    browser: CefBrowser,
+                    frame: CefFrame,
+                    request: CefRequest,
+                    userGesture: Boolean,
+                    isRedirect: Boolean,
+                ): Boolean = frame.isMain && !ExcalidrawResourceSchemeHandlerFactory.isTrustedFrontendUrl(request.url)
             },
             browser.cefBrowser,
         )
@@ -146,7 +167,7 @@ class ExcalidrawFileEditor(
     }
 
     private fun pushDocumentToFrontend() {
-        if (disposed) return
+        if (disposed || !isTrustedFrontend()) return
         val text = document.text
         lastPushedText = text
         executeJavaScript(
@@ -155,7 +176,7 @@ class ExcalidrawFileEditor(
     }
 
     private fun applyFrontendScene(payload: String, saveAfterUpdate: Boolean) {
-        if (disposed || payload == document.text) {
+        if (disposed || !isTrustedFrontend() || payload == document.text) {
             if (saveAfterUpdate) saveDocument()
             return
         }
@@ -182,12 +203,17 @@ class ExcalidrawFileEditor(
     }
 
     private fun executeJavaScript(script: String) {
+        if (!isTrustedFrontend()) return
+
         try {
             browser.cefBrowser.executeJavaScript(script, browser.cefBrowser.url, 0)
         } catch (error: Throwable) {
             thisLogger().warn("Failed to execute Excalidraw JCEF JavaScript", error)
         }
     }
+
+    private fun isTrustedFrontend(): Boolean =
+        ExcalidrawResourceSchemeHandlerFactory.isTrustedFrontendUrl(browser.cefBrowser.url)
 
     private fun String.toJavaScriptStringLiteral(): String = buildString(length + 16) {
         append('"')

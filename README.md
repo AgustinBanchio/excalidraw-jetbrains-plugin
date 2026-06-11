@@ -28,9 +28,10 @@ persisted on disk when the IDE saves the document.
 
 ## Compatibility
 
-The current `0.2.1` release targets JetBrains Platform build `253`, corresponding
-to JetBrains IDEs version `2025.3`. The compatible build range is configured in
-`gradle.properties`.
+The current `0.2.1` release requires JetBrains Platform build `253`,
+corresponding to JetBrains IDEs version `2025.3`, or newer. No upper build limit
+is declared. Compatibility with newer IDE releases should be checked with
+Plugin Verifier before publishing each release.
 
 The embedded editor requires a JetBrains Runtime with JCEF, which is included
 with normal JetBrains IDE installations.
@@ -244,6 +245,7 @@ The first JetBrains Marketplace publication must be uploaded manually:
 The Marketplace description comes directly from
 `src/main/resources/META-INF/plugin.xml`. Plugin and file type icons use the
 official Excalidraw favicon with attribution in `THIRD_PARTY_NOTICES.md`.
+`LICENSE` and `THIRD_PARTY_NOTICES.md` are bundled into the distributed plugin.
 
 Automated Marketplace publishing with `publishPlugin` is not configured yet.
 After the first manual publication, it can be added using a JetBrains

@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
     override fun create(browser: CefBrowser, frame: CefFrame, schemeName: String, request: CefRequest): CefResourceHandler {
         val uri = URI(request.url)
-        val stream = openResource(uri.path)
+        val stream = if (isTrustedFrontendUrl(request.url)) openResource(uri.path) else null
 
         return object : CefResourceHandler {
             override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
@@ -63,7 +63,8 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
 
     companion object {
         private const val DOMAIN = "excalidraw-jetbrains-plugin"
-        const val INDEX_URL = "https://$DOMAIN/index.html"
+        private const val ORIGIN = "https://$DOMAIN"
+        const val INDEX_URL = "$ORIGIN/index.html"
 
         private val registered = AtomicBoolean(false)
 
@@ -84,8 +85,23 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
             return true
         }
 
+        fun isTrustedFrontendUrl(url: String?): Boolean {
+            if (url == null) return false
+
+            return try {
+                val uri = URI(url)
+                uri.scheme == "https" && uri.host == DOMAIN && uri.port == -1
+            } catch (_: IllegalArgumentException) {
+                false
+            }
+        }
+
         private fun openResource(path: String): InputStream? {
             val normalizedPath = path.ifBlank { "/index.html" }
+            if (normalizedPath.contains('\\') || normalizedPath.split('/').any { it == ".." }) {
+                return null
+            }
+
             return ExcalidrawResourceSchemeHandlerFactory::class.java
                 .getResourceAsStream("/excalidraw-web$normalizedPath")
                 ?.let(::BufferedInputStream)

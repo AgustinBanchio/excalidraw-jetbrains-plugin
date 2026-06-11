@@ -10,7 +10,6 @@ version = "0.2.1"
 
 val platformVersion = providers.gradleProperty("platformVersion")
 val platformSinceBuild = providers.gradleProperty("platformSinceBuild")
-val platformUntilBuild = providers.gradleProperty("platformUntilBuild")
 val npmExecutable = if (System.getProperty("os.name").lowercase().contains("windows")) "npm.cmd" else "npm"
 val frontendDir = layout.projectDirectory.dir("frontend")
 val generatedFrontendDir = layout.buildDirectory.dir("generated/resources/excalidraw-web")
@@ -33,7 +32,6 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = platformSinceBuild
-            untilBuild = platformUntilBuild
         }
     }
 
@@ -82,6 +80,12 @@ tasks {
         dependsOn("copyFrontendResources")
         from(generatedFrontendDir) {
             into("excalidraw-web")
+        }
+        from(layout.projectDirectory.file("LICENSE")) {
+            into("META-INF")
+        }
+        from(layout.projectDirectory.file("THIRD_PARTY_NOTICES.md")) {
+            into("META-INF")
         }
     }
 

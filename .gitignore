@@ -16,8 +16,13 @@ frontend/.vite/
 *.pem
 *.key
 *.crt
+*.cer
 *.p12
 *.pfx
+*.jks
+*.keystore
+.env
+.env.*
 
 !gradle/wrapper/gradle-wrapper.jar
 
