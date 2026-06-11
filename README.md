@@ -1,145 +1,134 @@
-# Excalidraw JetBrains Plugin
+# Excalidraw Editor for JetBrains IDEs
 
-MVP IntelliJ Platform plugin for opening and editing `.excalidraw` files inside IntelliJ-based IDEs.
+An unofficial, free, open-source JetBrains IDE plugin for opening and editing
+`.excalidraw` drawings without leaving the IDE.
 
-The plugin registers a custom `.excalidraw` file type and opens matching files in a custom JCEF editor tab. The editor bundles a Vite + React frontend using `@excalidraw/excalidraw`, loads file JSON into Excalidraw, listens for scene changes, and writes updated JSON back to the IDE document so normal IDE save behavior persists it to disk.
+The plugin registers the `.excalidraw` file type and opens drawings in a custom
+JCEF-backed editor tab. It bundles the official Excalidraw React component,
+loads drawing JSON from the IDE document, and sends canvas changes back to the
+document so they participate in normal IDE save behavior and version control.
 
-This repository is a clean, modern Kotlin rewrite rather than a fork of the older abandoned implementations. It uses the IntelliJ Platform Gradle Plugin 2.x project layout and keeps the Excalidraw web UI as a separate frontend app.
+This repository is a modern Kotlin implementation built with the IntelliJ
+Platform Gradle Plugin 2.x. It is not a fork of an older Excalidraw plugin.
+
+## Features
+
+- Open and edit `.excalidraw` files in a dedicated IDE editor tab.
+- Use the familiar Excalidraw canvas and drawing tools.
+- Load drawings created by Excalidraw and other compatible editors.
+- Sync canvas changes into the IDE document automatically.
+- Save through `Ctrl+S` / `Cmd+S`, Save All, or normal IDE autosave.
+- Keep drawings local, portable, and version-control friendly.
+- Run without a cloud account.
+
+Canvas changes are sent to the IDE document after a short debounce. They become
+persisted on disk when the IDE saves the document.
+
+## Compatibility
+
+The current `0.2.0` release targets JetBrains Platform build `253`, corresponding
+to JetBrains IDEs version `2025.3`. The compatible build range is configured in
+`gradle.properties`.
+
+The embedded editor requires a JetBrains Runtime with JCEF, which is included
+with normal JetBrains IDE installations.
 
 ## Current Stack
 
-- Kotlin plugin code.
-- IntelliJ Platform Gradle Plugin 2.x.
-- Recent IntelliJ Platform target: `2025.3` / build `253`.
-- JCEF for the embedded editor UI.
-- Vite 8, React 19, TypeScript 6.
-- `@excalidraw/excalidraw` 0.18.1.
-- npm package overrides for a few Excalidraw transitive dependencies so installs are clean and `npm audit --omit=dev` reports no vulnerabilities.
+- Kotlin `2.3.21` and JVM toolchain 21.
+- Gradle `9.3.0`.
+- IntelliJ Platform Gradle Plugin `2.16.0`.
+- IntelliJ IDEA `2025.3` as the development platform.
+- JCEF for the embedded web editor.
+- Excalidraw `0.18.1`.
+- React `19.2.7`.
+- Vite `8.0.16`.
+- TypeScript `6.0.3`.
 - MIT license.
+
+Frontend dependencies are pinned in `frontend/package.json` and
+`frontend/package-lock.json`. Narrow npm overrides keep Excalidraw transitive
+dependencies compatible with React 19 and free of known production
+vulnerabilities.
 
 ## How It Works
 
-1. `plugin.xml` registers the `.excalidraw` file type and a custom `FileEditorProvider`.
-2. Opening a `.excalidraw` file creates `ExcalidrawFileEditor`.
-3. The editor starts a `JBCefBrowser`.
-4. A small JCEF scheme handler serves the bundled frontend from:
+1. `plugin.xml` registers the `.excalidraw` file type and
+   `ExcalidrawFileEditorProvider`.
+2. Opening a drawing creates `ExcalidrawFileEditor` and a `JBCefBrowser`.
+3. A JCEF scheme handler serves the bundled Vite build from
+   `https://excalidraw-jetbrains-plugin/index.html`.
+4. Kotlin sends the initial IDE document JSON to the React app.
+5. React renders Excalidraw and sends debounced scene changes back to Kotlin.
+6. Kotlin updates the IDE document; explicit save commands persist it to disk.
 
-   ```text
-   https://excalidraw-jetbrains-plugin/index.html
-   ```
-
-5. Kotlin sends the initial file JSON into the React app.
-6. The React app renders Excalidraw and sends debounced scene JSON changes back to Kotlin.
-7. Kotlin writes those changes into the IDE document. Pressing `Ctrl+S`, Save All, or the IDE's normal save flow persists the document to disk.
+The frontend is built during Gradle resource processing and bundled inside the
+plugin ZIP. Generated `frontend/dist` files are not committed.
 
 ## Requirements
 
-- JDK/JBR 21. A JetBrains Runtime with JCEF is recommended for `runIde`.
-- Node.js 20.19+ or 22.12+.
+- JDK or JetBrains Runtime 21.
+- Node.js `20.19+`, `22.12+`, or a newer supported Node.js release.
 - npm.
-- The Gradle wrapper from this repository.
+- The Gradle wrapper included in this repository.
 
-On Windows, if Java is not on `PATH`, point `JAVA_HOME` at a JBR 21 installation before running Gradle:
+If Java is not on `PATH`, set `JAVA_HOME` before running Gradle.
+
+Windows PowerShell:
 
 ```powershell
-$env:JAVA_HOME='C:\Program Files\JetBrains\JetBrains Rider 2025.3.3\jbr'
+$env:JAVA_HOME='<path-to-jbr-21>'
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
+```
+
+macOS or Linux:
+
+```bash
+export JAVA_HOME="<path-to-jbr-21>"
+export PATH="$JAVA_HOME/bin:$PATH"
 ```
 
 ## Repository Structure
 
 - `src/main/kotlin/com/agustinbanchio/excalidraw` - Kotlin plugin source.
-- `src/main/resources/META-INF/plugin.xml` - IntelliJ plugin descriptor.
-- `src/main/resources/icons` - file type icon.
-- `frontend` - Vite + React app using `@excalidraw/excalidraw`.
-- `samples` - sample drawings for manual testing.
+- `src/main/resources/META-INF/plugin.xml` - plugin descriptor and Marketplace
+  description.
+- `src/main/resources/META-INF/pluginIcon*.svg` - light and dark plugin icons.
+- `src/main/resources/icons` - `.excalidraw` file type icon.
+- `frontend` - Vite, React, and Excalidraw frontend.
+- `samples/hello.excalidraw` - sample drawing for manual testing.
 
 ## Run in a Sandbox IDE
+
+macOS or Linux:
 
 ```bash
 ./gradlew runIde
 ```
 
-On Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
 .\gradlew.bat runIde
 ```
 
-Gradle runs the frontend build before processing plugin resources, so `runIde` will install npm dependencies with `npm ci`, build the Vite app, bundle `frontend/dist`, and launch a sandbox IDE.
+Gradle runs `npm ci`, builds the frontend, bundles it into the plugin resources,
+and launches an isolated development IDE with the plugin installed.
 
 In the sandbox IDE:
 
 1. Open this repository folder.
 2. Open `samples/hello.excalidraw`.
-3. Draw or edit something in the Excalidraw editor.
-4. Press `Ctrl+S`.
+3. Edit the drawing.
+4. Press `Ctrl+S` or `Cmd+S`.
 5. Close and reopen the file to confirm the changes persisted.
 
-The sandbox IDE is an isolated test IDE used for plugin development. It does not modify your normal IntelliJ settings or installed plugins.
-
-## Build
-
-```bash
-./gradlew buildPlugin
-```
-
-The packaged plugin ZIP is written under `build/distributions`.
-
-## Sign The Plugin
-
-Plugin signing uses the IntelliJ Platform Gradle Plugin `signPlugin` task.
-
-Set `PLUGIN_SIGNING_DIR` to a directory outside the repository containing:
-
-```text
-chain.crt
-private.pem
-```
-
-The private key must be encrypted. Supply its directory and password through
-environment variables:
-
-```powershell
-$env:PLUGIN_SIGNING_DIR="$env:USERPROFILE\plugin-signing"
-
-$securePassword = Read-Host "Private key password" -AsSecureString
-$env:PRIVATE_KEY_PASSWORD = [System.Net.NetworkCredential]::new("", $securePassword).Password
-
-.\gradlew.bat signPlugin
-
-Remove-Item Env:PRIVATE_KEY_PASSWORD
-Remove-Item Env:PLUGIN_SIGNING_DIR
-```
-
-The signed plugin ZIP is written under `build/distributions`. Never commit the
-private key, certificate password, or signing environment variables. Back up
-the private key and password securely because future releases should use the
-same signing identity.
-
-## Verification
-
-Useful checks before committing:
-
-```bash
-cd frontend
-npm outdated
-npm audit --omit=dev
-cd ..
-./gradlew buildPlugin
-./gradlew runIde --dry-run
-```
-
-Expected status:
-
-- `npm outdated` has no output.
-- `npm audit --omit=dev` reports `found 0 vulnerabilities`.
-- `buildPlugin` succeeds.
-- `runIde --dry-run` succeeds.
+The sandbox IDE uses separate settings and installed plugins from your normal
+IDE.
 
 ## Frontend Development
 
-You can run the frontend alone while iterating on React UI:
+Run the frontend by itself for faster React and Excalidraw UI iteration:
 
 ```bash
 cd frontend
@@ -147,30 +136,145 @@ npm install
 npm run dev
 ```
 
-The standalone Vite app will not have the IntelliJ bridge, but it is useful for React and Excalidraw UI iteration. For plugin packaging, Gradle uses `npm ci` and the lockfile.
+The standalone Vite app does not have the IntelliJ bridge. Plugin builds use
+`npm ci` and the committed lockfile.
 
-## MVP Scope
+After changing dependencies, update the lockfile and verify the frontend:
+
+```bash
+cd frontend
+npm outdated
+npm audit --omit=dev
+npm run build
+```
+
+## Build and Install Locally
+
+Build the installable plugin ZIP:
+
+```bash
+./gradlew buildPlugin
+```
+
+On Windows, use `.\gradlew.bat buildPlugin`. The ZIP is written to
+`build/distributions`.
+
+To install it in a regular JetBrains IDE:
+
+1. Open **Settings | Plugins**.
+2. Open the gear menu and choose **Install Plugin from Disk...**.
+3. Select the generated ZIP.
+4. Restart the IDE when prompted.
+
+## Sign the Plugin
+
+Signing is configured through environment variables. Set `PLUGIN_SIGNING_DIR`
+to a directory outside the repository containing:
+
+```text
+chain.crt
+private.pem
+```
+
+The private key must be encrypted. On Windows PowerShell:
+
+```powershell
+$env:PLUGIN_SIGNING_DIR='<path-to-signing-directory>'
+
+$securePassword = Read-Host 'Private key password' -AsSecureString
+$env:PRIVATE_KEY_PASSWORD = [System.Net.NetworkCredential]::new('', $securePassword).Password
+
+.\gradlew.bat signPlugin
+.\gradlew.bat verifyPluginSignature
+
+Remove-Item Env:PRIVATE_KEY_PASSWORD
+Remove-Item Env:PLUGIN_SIGNING_DIR
+```
+
+The signed ZIP is written under `build/distributions`. Never commit private
+keys, certificates, passwords, or signing environment variables. Keep a secure
+backup of the private key and password so future releases use the same signing
+identity.
+
+## Verify a Release
+
+Before publishing:
+
+```bash
+cd frontend
+npm outdated
+npm audit --omit=dev
+npm run build
+cd ..
+./gradlew buildPlugin
+./gradlew verifyPlugin
+```
+
+For a signed release, also run `./gradlew verifyPluginSignature`.
+
+Expected results:
+
+- `npm outdated` produces no dependency table.
+- `npm audit --omit=dev` reports zero vulnerabilities.
+- Frontend and plugin builds succeed.
+- Plugin Verifier reports compatibility with the configured IDE target.
+- Signature verification succeeds for the signed ZIP.
+
+## Version and Publish
+
+The plugin version is set in `build.gradle.kts`. Use semantic versioning and
+update the version before building each release. The generated ZIP filename and
+Marketplace version are derived from that value.
+
+The first JetBrains Marketplace publication must be uploaded manually:
+
+1. Update the version and release notes as needed.
+2. Complete the release verification steps.
+3. Build and sign the plugin.
+4. Log in to JetBrains Marketplace and choose **Add new plugin** from your
+   profile.
+5. Upload the signed ZIP from `build/distributions`.
+6. Complete the Marketplace listing, including the MIT license and source
+   repository URL.
+
+The Marketplace description comes directly from
+`src/main/resources/META-INF/plugin.xml`. Plugin and file type icons use the
+official Excalidraw favicon with attribution in `THIRD_PARTY_NOTICES.md`.
+
+Automated Marketplace publishing with `publishPlugin` is not configured yet.
+After the first manual publication, it can be added using a JetBrains
+Marketplace personal access token stored outside the repository.
+
+See JetBrains' official
+[Publishing a Plugin](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html)
+and
+[Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html)
+documentation for the current Marketplace process.
+
+## Current Scope
 
 Included:
 
-- Kotlin plugin using IntelliJ Platform Gradle Plugin 2.x.
 - `.excalidraw` file type registration.
-- `FileEditorProvider` and JCEF-backed `FileEditor`.
-- Bundled Vite + React frontend with Excalidraw.
-- Custom JCEF resource scheme for bundled frontend assets.
-- Basic Kotlin-to-JS and JS-to-Kotlin bridge for initial file load, scene updates, and save.
+- JCEF-backed custom file editor.
+- Bundled current Excalidraw React frontend.
+- Kotlin-to-JavaScript and JavaScript-to-Kotlin bridge.
+- Initial file loading, scene synchronization, and IDE document saving.
+- Marketplace description, icons, and environment-based plugin signing.
 
-Not included yet:
+Not included as plugin-specific integrations:
 
-- Cloud sync.
-- Collaboration.
-- Image export.
-- Marketplace publishing metadata.
+- Excalidraw cloud sync or collaboration.
+- Custom image export actions.
+- Automated Marketplace publishing.
 
-## Notes
+## License and Attribution
 
-- The plugin currently targets `.excalidraw` JSON files only.
-- Canvas changes are synced into the IntelliJ document automatically, but disk persistence follows IDE save behavior.
-- The dependency overrides in `frontend/package.json` are intentionally narrow. They keep the MVP on the latest Excalidraw package while avoiding known vulnerable transitive versions and React 19 peer warning noise.
-- The plugin uses the current official Excalidraw favicon from `excalidraw/excalidraw`, which is MIT licensed. See `THIRD_PARTY_NOTICES.md`.
-- This is an unofficial plugin and is not endorsed by Excalidraw.
+This project is licensed under the MIT License. See `LICENSE`.
+
+The plugin uses the current official Excalidraw favicon from the active
+`excalidraw/excalidraw` repository. Excalidraw and its favicon are MIT licensed;
+see `THIRD_PARTY_NOTICES.md`.
+
+This is an unofficial community plugin and is not endorsed by or affiliated
+with Excalidraw.
