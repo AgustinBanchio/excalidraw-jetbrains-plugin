@@ -86,6 +86,37 @@ The sandbox IDE is an isolated test IDE used for plugin development. It does not
 
 The packaged plugin ZIP is written under `build/distributions`.
 
+## Sign The Plugin
+
+Plugin signing uses the IntelliJ Platform Gradle Plugin `signPlugin` task.
+
+Set `PLUGIN_SIGNING_DIR` to a directory outside the repository containing:
+
+```text
+chain.crt
+private.pem
+```
+
+The private key must be encrypted. Supply its directory and password through
+environment variables:
+
+```powershell
+$env:PLUGIN_SIGNING_DIR="$env:USERPROFILE\plugin-signing"
+
+$securePassword = Read-Host "Private key password" -AsSecureString
+$env:PRIVATE_KEY_PASSWORD = [System.Net.NetworkCredential]::new("", $securePassword).Password
+
+.\gradlew.bat signPlugin
+
+Remove-Item Env:PRIVATE_KEY_PASSWORD
+Remove-Item Env:PLUGIN_SIGNING_DIR
+```
+
+The signed plugin ZIP is written under `build/distributions`. Never commit the
+private key, certificate password, or signing environment variables. Back up
+the private key and password securely because future releases should use the
+same signing identity.
+
 ## Verification
 
 Useful checks before committing:
@@ -141,5 +172,5 @@ Not included yet:
 - The plugin currently targets `.excalidraw` JSON files only.
 - Canvas changes are synced into the IntelliJ document automatically, but disk persistence follows IDE save behavior.
 - The dependency overrides in `frontend/package.json` are intentionally narrow. They keep the MVP on the latest Excalidraw package while avoiding known vulnerable transitive versions and React 19 peer warning noise.
-- The plugin uses the official Excalidraw logo mark from `excalidraw/excalidraw-logo`, which is MIT licensed. See `THIRD_PARTY_NOTICES.md`.
+- The plugin uses the current official Excalidraw favicon from `excalidraw/excalidraw`, which is MIT licensed. See `THIRD_PARTY_NOTICES.md`.
 - This is an unofficial plugin and is not endorsed by Excalidraw.

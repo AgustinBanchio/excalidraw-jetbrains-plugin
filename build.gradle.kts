@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     kotlin("jvm") version "2.3.21"
     id("org.jetbrains.intellij.platform")
@@ -12,6 +14,7 @@ val platformUntilBuild = providers.gradleProperty("platformUntilBuild")
 val npmExecutable = if (System.getProperty("os.name").lowercase().contains("windows")) "npm.cmd" else "npm"
 val frontendDir = layout.projectDirectory.dir("frontend")
 val generatedFrontendDir = layout.buildDirectory.dir("generated/resources/excalidraw-web")
+val pluginSigningDir = providers.environmentVariable("PLUGIN_SIGNING_DIR")
 
 dependencies {
     intellijPlatform {
@@ -31,6 +34,12 @@ intellijPlatform {
             sinceBuild = platformSinceBuild
             untilBuild = platformUntilBuild
         }
+    }
+
+    signing {
+        certificateChainFile = layout.file(pluginSigningDir.map { File(it, "chain.crt") })
+        privateKeyFile = layout.file(pluginSigningDir.map { File(it, "private.pem") })
+        password = providers.environmentVariable("PRIVATE_KEY_PASSWORD")
     }
 }
 

@@ -5,37 +5,30 @@
 
     <description><![CDATA[
         <p>
-            Excalidraw Editor is an unofficial JetBrains IDE plugin for opening and editing
-            <code>.excalidraw</code> files directly inside IntelliJ-based IDEs.
+            Open and edit <code>.excalidraw</code> drawings directly inside JetBrains IDEs.
         </p>
 
         <p>
-            The plugin adds a custom editor tab backed by JCEF and the official
-            <code>@excalidraw/excalidraw</code> React package, so Excalidraw drawings can be
-            viewed and edited without leaving the IDE.
+            Excalidraw Editor adds a full embedded Excalidraw canvas to IntelliJ IDEA,
+            WebStorm, PyCharm, GoLand, and other compatible JetBrains IDEs. Drawings
+            remain ordinary <code>.excalidraw</code> JSON files in your project, ready to
+            commit, review, and share with the rest of your codebase.
         </p>
 
         <h3>Features</h3>
         <ul>
-            <li>Registers <code>.excalidraw</code> files as a custom file type.</li>
-            <li>Opens <code>.excalidraw</code> files in an embedded Excalidraw editor.</li>
-            <li>Loads existing Excalidraw JSON from the opened file.</li>
-            <li>Syncs scene changes back into the IDE document.</li>
-            <li>Supports normal IDE save behavior, including Save and Save All.</li>
-            <li>Bundles the Excalidraw frontend locally, with no cloud sync or collaboration dependency.</li>
-        </ul>
-
-        <h3>MVP Scope</h3>
-        <ul>
-            <li>No cloud sync.</li>
-            <li>No collaboration features.</li>
-            <li>No image export yet.</li>
-            <li>No marketplace-specific account integration.</li>
+            <li>Open and edit <code>.excalidraw</code> files in a dedicated editor tab.</li>
+            <li>Use the familiar Excalidraw drawing tools without leaving the IDE.</li>
+            <li>Load drawings created by Excalidraw and other compatible editors.</li>
+            <li>Automatically sync canvas changes into the IDE document.</li>
+            <li>Save through the IDE using Save, Save All, and normal IDE save behavior.</li>
+            <li>Keep drawings local and version-control friendly.</li>
+            <li>Run the bundled editor without requiring a cloud account.</li>
         </ul>
 
         <p>
-            This plugin is free, open source, and unofficial. It is not endorsed by or
-            affiliated with Excalidraw.
+            Free and open source. This is an unofficial community plugin and is not
+            endorsed by or affiliated with Excalidraw.
         </p>
     ]]></description>
 

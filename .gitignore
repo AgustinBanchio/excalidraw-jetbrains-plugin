@@ -13,6 +13,11 @@ frontend/.vite/
 
 *.log
 *.tmp
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
 
 !gradle/wrapper/gradle-wrapper.jar
 
