@@ -24,17 +24,20 @@
         "type": 3
       },
       "seed": 577336686,
-      "version": 10,
-      "versionNonce": 1593713646,
+      "version": 11,
+      "versionNonce": 1548874296,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1780154605170,
+      "updated": 1781209778360,
       "link": null,
-      "locked": false
+      "locked": false,
+      "index": "a0"
     }
   ],
   "appState": {
     "gridSize": null,
+    "gridStep": 5,
+    "gridModeEnabled": false,
     "viewBackgroundColor": "#ffffff"
   },
   "files": {}
