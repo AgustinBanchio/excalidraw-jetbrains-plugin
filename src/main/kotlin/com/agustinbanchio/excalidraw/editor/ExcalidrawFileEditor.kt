@@ -28,10 +28,10 @@ import javax.swing.JComponent
 
 class ExcalidrawFileEditor(
     private val project: Project,
-    private val file: VirtualFile,
+    private val virtualFile: VirtualFile,
 ) : UserDataHolderBase(), FileEditor {
-    private val document: Document = FileDocumentManager.getInstance().getDocument(file)
-        ?: error("Unable to open document for ${file.path}")
+    private val document: Document = FileDocumentManager.getInstance().getDocument(virtualFile)
+        ?: error("Unable to open document for ${virtualFile.path}")
     private val browser = JBCefBrowser()
     private val propertyChangeSupport = PropertyChangeSupport(this)
     private val readyQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
@@ -52,11 +52,13 @@ class ExcalidrawFileEditor(
 
     override fun getName(): String = "Excalidraw"
 
+    override fun getFile(): VirtualFile = virtualFile
+
     override fun setState(state: FileEditorState) = Unit
 
     override fun isModified(): Boolean = FileDocumentManager.getInstance().isDocumentUnsaved(document)
 
-    override fun isValid(): Boolean = file.isValid
+    override fun isValid(): Boolean = virtualFile.isValid
 
     override fun addPropertyChangeListener(listener: PropertyChangeListener) {
         propertyChangeSupport.addPropertyChangeListener(listener)

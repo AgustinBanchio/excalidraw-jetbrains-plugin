@@ -36,6 +36,7 @@
         <h3>0.2.0</h3>
         <ul>
             <li>Fixed Excalidraw file type registration on recent JetBrains IDEs.</li>
+            <li>Fixed custom editor compatibility with the current FileEditor API.</li>
             <li>Updated Excalidraw, React, Vite, TypeScript, and supporting frontend dependencies.</li>
             <li>Added Marketplace-ready plugin description and current Excalidraw icons.</li>
             <li>Added environment-based plugin signing support.</li>
