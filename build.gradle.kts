@@ -87,4 +87,8 @@ tasks {
     runIde {
         autoReload = false
     }
+
+    verifyPluginSignature {
+        dependsOn(signPlugin)
+    }
 }
