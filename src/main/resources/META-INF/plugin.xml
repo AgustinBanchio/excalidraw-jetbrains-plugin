@@ -35,6 +35,7 @@
     <change-notes><![CDATA[
         <h3>0.2.0</h3>
         <ul>
+            <li>Fixed Excalidraw file type registration on recent JetBrains IDEs.</li>
             <li>Updated Excalidraw, React, Vite, TypeScript, and supporting frontend dependencies.</li>
             <li>Added Marketplace-ready plugin description and current Excalidraw icons.</li>
             <li>Added environment-based plugin signing support.</li>
@@ -47,6 +48,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <fileType
             name="Excalidraw"
+            language="Excalidraw"
             implementationClass="com.agustinbanchio.excalidraw.file.ExcalidrawFileType"
             fieldName="INSTANCE"
             extensions="excalidraw"/>
