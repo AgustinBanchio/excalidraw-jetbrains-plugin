@@ -87,15 +87,21 @@ function notifyWhenBridgeIsReady() {
 
 function App() {
   const [initialData, setInitialData] = React.useState<Scene>(EMPTY_SCENE);
-  const [api, setApi] = React.useState<any>(null);
+  const api = React.useRef<any>(null);
   const lastSerialized = React.useRef<string>("");
   const latestSerialized = React.useRef<string>(JSON.stringify(EMPTY_SCENE, null, 2));
   const pendingTimer = React.useRef<number | undefined>(undefined);
+  const loadingTimer = React.useRef<number | undefined>(undefined);
+  const loadingScene = React.useRef(false);
 
   React.useEffect(() => {
     window.excalidrawPlugin = {
       loadFile(contents: string) {
         try {
+          window.clearTimeout(pendingTimer.current);
+          window.clearTimeout(loadingTimer.current);
+          loadingScene.current = true;
+
           const scene = parseScene(contents);
           const nextData = {
             elements: scene.elements,
@@ -104,17 +110,35 @@ function App() {
           };
 
           setInitialData(nextData);
-          api?.updateScene(nextData);
-          lastSerialized.current = JSON.stringify(scene, null, 2);
-          latestSerialized.current = lastSerialized.current;
+          api.current?.updateScene(nextData);
+          lastSerialized.current = "";
+          latestSerialized.current = contents;
+
+          loadingTimer.current = window.setTimeout(() => {
+            if (api.current) {
+              lastSerialized.current = serializeScene(
+                api.current.getSceneElements(),
+                api.current.getAppState(),
+                api.current.getFiles()
+              );
+            }
+            loadingScene.current = false;
+          }, 100);
         } catch (error) {
+          loadingScene.current = false;
           console.error("Failed to load .excalidraw file", error);
         }
       }
     };
 
     notifyWhenBridgeIsReady();
-  }, [api]);
+
+    return () => {
+      window.clearTimeout(pendingTimer.current);
+      window.clearTimeout(loadingTimer.current);
+      delete window.excalidrawPlugin;
+    };
+  }, []);
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -132,15 +156,22 @@ function App() {
     <div className="editor-shell">
       <Excalidraw
         initialData={initialData as any}
-        excalidrawAPI={(nextApi: any) => setApi(nextApi)}
+        excalidrawAPI={(nextApi: any) => {
+          api.current = nextApi;
+        }}
         onChange={(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>) => {
           const serialized = serializeScene(elements, appState, files);
-          latestSerialized.current = serialized;
+
+          if (loadingScene.current || !lastSerialized.current) {
+            lastSerialized.current = serialized;
+            return;
+          }
 
           if (serialized === lastSerialized.current) {
             return;
           }
 
+          latestSerialized.current = serialized;
           window.clearTimeout(pendingTimer.current);
           pendingTimer.current = window.setTimeout(() => {
             lastSerialized.current = serialized;
