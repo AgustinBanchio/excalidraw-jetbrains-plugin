@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.agustinbanchio"
-version = "0.2.0"
+version = "0.2.1"
 
 val platformVersion = providers.gradleProperty("platformVersion")
 val platformSinceBuild = providers.gradleProperty("platformSinceBuild")
@@ -20,6 +20,7 @@ dependencies {
     intellijPlatform {
         intellijIdea(platformVersion)
         bundledPlugin("com.intellij.java")
+        bundledPlugin("com.intellij.modules.json")
         pluginVerifier()
     }
 }

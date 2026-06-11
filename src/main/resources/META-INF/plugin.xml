@@ -18,6 +18,7 @@
         <h3>Features</h3>
         <ul>
             <li>Open and edit <code>.excalidraw</code> files in a dedicated editor tab.</li>
+            <li>Create new Excalidraw drawings and scratch files directly from the IDE.</li>
             <li>Use the familiar Excalidraw drawing tools without leaving the IDE.</li>
             <li>Load drawings created by Excalidraw and other compatible editors.</li>
             <li>Automatically sync canvas changes into the IDE document.</li>
@@ -33,6 +34,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>0.2.1</h3>
+        <ul>
+            <li>Added Excalidraw Drawing to the IDE's New menu.</li>
+            <li>Added initialized Excalidraw scratch-file creation.</li>
+            <li>Registered Excalidraw as a JSON-compatible language and file type.</li>
+            <li>Fixed parser and file-template compatibility with recent JetBrains IDEs.</li>
+        </ul>
+
         <h3>0.2.0</h3>
         <ul>
             <li>Fixed Excalidraw file type registration on recent JetBrains IDEs.</li>
@@ -46,8 +55,11 @@
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.json</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <internalFileTemplate name="Excalidraw Drawing"/>
+
         <fileType
             name="Excalidraw"
             language="Excalidraw"
@@ -56,5 +68,24 @@
             extensions="excalidraw"/>
 
         <fileEditorProvider implementation="com.agustinbanchio.excalidraw.editor.ExcalidrawFileEditorProvider"/>
+
+        <lang.parserDefinition
+            language="Excalidraw"
+            implementationClass="com.agustinbanchio.excalidraw.file.ExcalidrawJsonParserDefinition"/>
+
+        <scratch.creationHelper
+            language="Excalidraw"
+            implementationClass="com.agustinbanchio.excalidraw.scratch.ExcalidrawScratchFileCreationHelper"/>
     </extensions>
+
+    <actions>
+        <action
+            id="com.agustinbanchio.excalidraw.NewFile"
+            class="com.agustinbanchio.excalidraw.actions.ExcalidrawNewFileAction"
+            text="Excalidraw Drawing"
+            description="Create a new Excalidraw drawing"
+            icon="/icons/excalidraw.svg">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
+        </action>
+    </actions>
 </idea-plugin>

@@ -14,6 +14,8 @@ Platform Gradle Plugin 2.x. It is not a fork of an older Excalidraw plugin.
 ## Features
 
 - Open and edit `.excalidraw` files in a dedicated IDE editor tab.
+- Create Excalidraw drawings from the IDE's New menu.
+- Create initialized Excalidraw scratch files.
 - Use the familiar Excalidraw canvas and drawing tools.
 - Load drawings created by Excalidraw and other compatible editors.
 - Sync canvas changes into the IDE document automatically.
@@ -26,7 +28,7 @@ persisted on disk when the IDE saves the document.
 
 ## Compatibility
 
-The current `0.2.0` release targets JetBrains Platform build `253`, corresponding
+The current `0.2.1` release targets JetBrains Platform build `253`, corresponding
 to JetBrains IDEs version `2025.3`. The compatible build range is configured in
 `gradle.properties`.
 
@@ -95,6 +97,8 @@ export PATH="$JAVA_HOME/bin:$PATH"
   description.
 - `src/main/resources/META-INF/pluginIcon*.svg` - light and dark plugin icons.
 - `src/main/resources/icons` - `.excalidraw` file type icon.
+- `src/main/resources/fileTemplates/internal` - blank drawing template used by
+  new files and scratch files.
 - `frontend` - Vite, React, and Excalidraw frontend.
 - `samples/hello.excalidraw` - sample drawing for manual testing.
 
@@ -256,6 +260,7 @@ documentation for the current Marketplace process.
 Included:
 
 - `.excalidraw` file type registration.
+- New drawing and scratch file creation.
 - JCEF-backed custom file editor.
 - Bundled current Excalidraw React frontend.
 - Kotlin-to-JavaScript and JavaScript-to-Kotlin bridge.
