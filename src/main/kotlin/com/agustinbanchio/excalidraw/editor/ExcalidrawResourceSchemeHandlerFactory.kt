@@ -13,6 +13,9 @@ import org.cef.network.CefResponse
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -21,43 +24,96 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
         val uri = URI(request.url)
         val stream = if (isTrustedFrontendUrl(request.url)) openResource(uri.path) else null
 
-        return object : CefResourceHandler {
-            override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
-                callback.Continue()
-                return true
+        val handler = ResourceHandlerInvocationHandler(uri.path, stream)
+        return Proxy.newProxyInstance(
+            CefResourceHandler::class.java.classLoader,
+            arrayOf(CefResourceHandler::class.java),
+            handler,
+        ) as CefResourceHandler
+    }
+
+    private class ResourceHandlerInvocationHandler(
+        private val path: String,
+        private val stream: InputStream?,
+    ) : InvocationHandler {
+        override fun invoke(proxy: Any, method: Method, args: Array<out Any?>?): Any? {
+            val arguments = args.orEmpty()
+            return when (method.name) {
+                "processRequest" -> processRequest(arguments)
+                "open" -> open(arguments)
+                "getResponseHeaders" -> getResponseHeaders(arguments)
+                "readResponse", "read" -> read(arguments)
+                "skip" -> skip(arguments)
+                "cancel" -> closeQuietly(stream)
+                "toString" -> "ExcalidrawResourceHandler($path)"
+                "hashCode" -> System.identityHashCode(proxy)
+                "equals" -> proxy === arguments.firstOrNull()
+                else -> error("Unsupported CefResourceHandler method: ${method.name}")
+            }
+        }
+
+        private fun processRequest(args: Array<out Any?>): Boolean {
+            (args[1] as CefCallback).Continue()
+            return true
+        }
+
+        private fun open(args: Array<out Any?>): Boolean {
+            setRef(args[1], true)
+            return false
+        }
+
+        private fun getResponseHeaders(args: Array<out Any?>) {
+            val response = args[0] as CefResponse
+            response.mimeType = mimeType(path)
+            response.status = if (stream == null) 404 else 200
+        }
+
+        private fun read(args: Array<out Any?>): Boolean {
+            val dataOut = args[0] as ByteArray
+            val bytesToRead = args[1] as Int
+            val bytesRead = args[2] as IntRef
+
+            if (stream == null) {
+                bytesRead.set(0)
+                return false
             }
 
-            override fun getResponseHeaders(response: CefResponse, responseLength: IntRef, redirectUrl: StringRef?) {
-                response.mimeType = mimeType(uri.path)
-                response.status = if (stream == null) 404 else 200
-            }
-
-            override fun readResponse(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
-                if (stream == null) {
-                    bytesRead.set(0)
-                    return false
-                }
-
-                return try {
-                    val read = stream.read(dataOut, 0, bytesToRead)
-                    if (read >= 0) {
-                        bytesRead.set(read)
-                        true
-                    } else {
-                        bytesRead.set(0)
-                        closeQuietly(stream)
-                        false
-                    }
-                } catch (_: IOException) {
+            return try {
+                val read = stream.read(dataOut, 0, bytesToRead)
+                if (read >= 0) {
+                    bytesRead.set(read)
+                    true
+                } else {
                     bytesRead.set(0)
                     closeQuietly(stream)
                     false
                 }
+            } catch (_: IOException) {
+                bytesRead.set(0)
+                closeQuietly(stream)
+                false
+            }
+        }
+
+        private fun skip(args: Array<out Any?>): Boolean {
+            if (stream == null) {
+                setRef(args[1], -2L)
+                return false
             }
 
-            override fun cancel() {
-                closeQuietly(stream)
+            return try {
+                setRef(args[1], stream.skip(args[0] as Long))
+                true
+            } catch (_: IOException) {
+                setRef(args[1], -2L)
+                false
             }
+        }
+
+        private fun setRef(reference: Any?, value: Any) {
+            reference?.javaClass?.methods
+                ?.firstOrNull { it.name == "set" && it.parameterCount == 1 }
+                ?.invoke(reference, value)
         }
     }
 

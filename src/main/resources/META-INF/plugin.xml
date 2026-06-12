@@ -34,6 +34,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>0.2.3</h3>
+        <ul>
+            <li>Fixed JCEF resource-handler compatibility with upcoming JetBrains Platform 262 builds.</li>
+            <li>Removed deprecated JCEF resource-handler API usage reported by Marketplace verification.</li>
+            <li>Kept one plugin artifact compatible with JetBrains Platform builds 253, 261, and 262.</li>
+        </ul>
+
         <h3>0.2.2</h3>
         <ul>
             <li>Allowed installation on newer JetBrains IDE releases by removing the artificial upper build limit.</li>

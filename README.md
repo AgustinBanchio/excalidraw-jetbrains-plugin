@@ -28,7 +28,7 @@ persisted on disk when the IDE saves the document.
 
 ## Compatibility
 
-The current `0.2.2` release requires JetBrains Platform build `253`,
+The current `0.2.3` release requires JetBrains Platform build `253`,
 corresponding to JetBrains IDEs version `2025.3`, or newer. No upper build limit
 is declared. Compatibility with newer IDE releases should be checked with
 Plugin Verifier before publishing each release.
@@ -68,9 +68,11 @@ vulnerabilities.
    `https://excalidraw-jetbrains-plugin/index.html`.
 4. The editor restricts navigation and its privileged Kotlin bridge to that
    bundled origin.
-5. Kotlin sends the initial IDE document JSON to the React app.
-6. React renders Excalidraw and sends debounced scene changes back to Kotlin.
-7. Kotlin updates the IDE document; explicit save commands persist it to disk.
+5. The resource handler adapts at runtime to the JCEF API provided by the
+   installed IDE, including upcoming platform versions.
+6. Kotlin sends the initial IDE document JSON to the React app.
+7. React renders Excalidraw and sends debounced scene changes back to Kotlin.
+8. Kotlin updates the IDE document; explicit save commands persist it to disk.
 
 The frontend is built during Gradle resource processing and bundled inside the
 plugin ZIP. Generated `frontend/dist` files are not committed.
