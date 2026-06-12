@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.agustinbanchio"
-version = "0.2.1"
+version = "0.2.2"
 
 val platformVersion = providers.gradleProperty("platformVersion")
 val platformSinceBuild = providers.gradleProperty("platformSinceBuild")

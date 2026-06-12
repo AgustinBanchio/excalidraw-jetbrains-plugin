@@ -34,6 +34,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>0.2.2</h3>
+        <ul>
+            <li>Allowed installation on newer JetBrains IDE releases by removing the artificial upper build limit.</li>
+            <li>Hardened the JCEF editor bridge against untrusted navigation and resource paths.</li>
+            <li>Bundled the project license and third-party notices in the distributed plugin.</li>
+            <li>Removed bundled Kotlin standard-library duplication and improved repository secret exclusions.</li>
+        </ul>
+
         <h3>0.2.1</h3>
         <ul>
             <li>Added Excalidraw Drawing to the IDE's New menu.</li>

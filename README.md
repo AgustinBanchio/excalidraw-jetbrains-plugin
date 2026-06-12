@@ -28,13 +28,18 @@ persisted on disk when the IDE saves the document.
 
 ## Compatibility
 
-The current `0.2.1` release requires JetBrains Platform build `253`,
+The current `0.2.2` release requires JetBrains Platform build `253`,
 corresponding to JetBrains IDEs version `2025.3`, or newer. No upper build limit
 is declared. Compatibility with newer IDE releases should be checked with
 Plugin Verifier before publishing each release.
 
 The embedded editor requires a JetBrains Runtime with JCEF, which is included
 with normal JetBrains IDE installations.
+
+JetBrains Marketplace determines the supported-product list from the declared
+IntelliJ Platform modules. JetBrains Gateway itself is not supported because it
+does not provide the JSON language module; remote-development hosts and
+JetBrains Client are listed separately by Marketplace.
 
 ## Current Stack
 
@@ -61,9 +66,11 @@ vulnerabilities.
 2. Opening a drawing creates `ExcalidrawFileEditor` and a `JBCefBrowser`.
 3. A JCEF scheme handler serves the bundled Vite build from
    `https://excalidraw-jetbrains-plugin/index.html`.
-4. Kotlin sends the initial IDE document JSON to the React app.
-5. React renders Excalidraw and sends debounced scene changes back to Kotlin.
-6. Kotlin updates the IDE document; explicit save commands persist it to disk.
+4. The editor restricts navigation and its privileged Kotlin bridge to that
+   bundled origin.
+5. Kotlin sends the initial IDE document JSON to the React app.
+6. React renders Excalidraw and sends debounced scene changes back to Kotlin.
+7. Kotlin updates the IDE document; explicit save commands persist it to disk.
 
 The frontend is built during Gradle resource processing and bundled inside the
 plugin ZIP. Generated `frontend/dist` files are not committed.
@@ -215,6 +222,19 @@ cd ..
 ./gradlew verifyPlugin
 ```
 
+To verify against a newer JetBrains Platform release without changing
+`gradle.properties`, override `platformVersion`:
+
+```bash
+./gradlew verifyPlugin -PplatformVersion=2026.1
+```
+
+On Windows PowerShell, quote the property argument:
+
+```powershell
+.\gradlew.bat verifyPlugin '-PplatformVersion=2026.1'
+```
+
 For a signed release, also run `./gradlew verifyPluginSignature`.
 
 Expected results:
@@ -268,6 +288,7 @@ Included:
 - Kotlin-to-JavaScript and JavaScript-to-Kotlin bridge.
 - Initial file loading, scene synchronization, and IDE document saving.
 - Marketplace description, icons, and environment-based plugin signing.
+- Origin-restricted JCEF navigation and Kotlin bridge access.
 
 Not included as plugin-specific integrations:
 
