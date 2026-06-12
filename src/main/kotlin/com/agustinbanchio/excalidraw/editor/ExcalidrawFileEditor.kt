@@ -1,5 +1,6 @@
 package com.agustinbanchio.excalidraw.editor
 
+import com.agustinbanchio.excalidraw.settings.ExcalidrawThemeSettings
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.diagnostic.thisLogger
@@ -39,6 +40,7 @@ class ExcalidrawFileEditor(
     private val readyQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val sceneChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val saveQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val themeChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private var disposed = false
     private var lastPushedText: String? = null
 
@@ -77,6 +79,7 @@ class ExcalidrawFileEditor(
         Disposer.dispose(readyQuery)
         Disposer.dispose(sceneChangedQuery)
         Disposer.dispose(saveQuery)
+        Disposer.dispose(themeChangedQuery)
         Disposer.dispose(browser)
     }
 
@@ -101,6 +104,13 @@ class ExcalidrawFileEditor(
             if (!isTrustedFrontend()) return@addHandler null
 
             applyFrontendScene(payload, saveAfterUpdate = true)
+            null
+        }
+
+        themeChangedQuery.addHandler { theme ->
+            if (!isTrustedFrontend()) return@addHandler null
+
+            ExcalidrawThemeSettings.getInstance().rememberTheme(theme)
             null
         }
 
@@ -159,7 +169,8 @@ class ExcalidrawFileEditor(
             window.intellijExcalidraw = {
               ready: function(payload) { ${readyQuery.inject("payload")} },
               sceneChanged: function(payload) { ${sceneChangedQuery.inject("payload")} },
-              save: function(payload) { ${saveQuery.inject("payload")} }
+              save: function(payload) { ${saveQuery.inject("payload")} },
+              themeChanged: function(payload) { ${themeChangedQuery.inject("payload")} }
             };
             window.dispatchEvent(new CustomEvent("intellij-excalidraw-bridge-ready"));
         """.trimIndent()
@@ -169,9 +180,10 @@ class ExcalidrawFileEditor(
     private fun pushDocumentToFrontend() {
         if (disposed || !isTrustedFrontend()) return
         val text = document.text
+        val preferredTheme = ExcalidrawThemeSettings.getInstance().preferredTheme
         lastPushedText = text
         executeJavaScript(
-            "window.excalidrawPlugin?.loadFile(${text.toJavaScriptStringLiteral()});",
+            "window.excalidrawPlugin?.loadFile(${text.toJavaScriptStringLiteral()}, ${preferredTheme.toJavaScriptStringLiteral()});",
         )
     }
 

@@ -8,16 +8,19 @@ type Bridge = {
   ready: (payload: string) => void;
   sceneChanged: (payload: string) => void;
   save: (payload: string) => void;
+  themeChanged: (payload: Theme) => void;
 };
 
 declare global {
   interface Window {
     intellijExcalidraw?: Bridge;
     excalidrawPlugin?: {
-      loadFile: (contents: string) => void;
+      loadFile: (contents: string, preferredTheme: Theme) => void;
     };
   }
 }
+
+type Theme = "light" | "dark";
 
 type Scene = {
   type?: string;
@@ -37,19 +40,30 @@ const EMPTY_SCENE: Scene = {
   files: {}
 };
 
-function parseScene(contents: string): Scene {
+function parseScene(contents: string, preferredTheme: Theme): Scene {
   if (!contents.trim()) {
-    return EMPTY_SCENE;
+    return {
+      ...EMPTY_SCENE,
+      appState: { theme: preferredTheme }
+    };
   }
 
   const parsed = JSON.parse(contents) as Scene;
+  const appState = sanitizeAppState(parsed.appState ?? {});
   return {
     ...EMPTY_SCENE,
     ...parsed,
     elements: Array.isArray(parsed.elements) ? parsed.elements : [],
-    appState: sanitizeAppState(parsed.appState ?? {}),
+    appState: {
+      theme: preferredTheme,
+      ...appState
+    },
     files: parsed.files ?? {}
   };
+}
+
+function getTheme(appState: unknown): Theme {
+  return (appState as Record<string, unknown> | undefined)?.theme === "dark" ? "dark" : "light";
 }
 
 function sanitizeAppState(appState: Record<string, unknown>): Record<string, unknown> {
@@ -93,16 +107,17 @@ function App() {
   const pendingTimer = React.useRef<number | undefined>(undefined);
   const loadingTimer = React.useRef<number | undefined>(undefined);
   const loadingScene = React.useRef(false);
+  const lastTheme = React.useRef<Theme | undefined>(undefined);
 
   React.useEffect(() => {
     window.excalidrawPlugin = {
-      loadFile(contents: string) {
+      loadFile(contents: string, preferredTheme: Theme) {
         try {
           window.clearTimeout(pendingTimer.current);
           window.clearTimeout(loadingTimer.current);
           loadingScene.current = true;
 
-          const scene = parseScene(contents);
+          const scene = parseScene(contents, preferredTheme);
           const nextData = {
             elements: scene.elements,
             appState: scene.appState,
@@ -113,6 +128,7 @@ function App() {
           api.current?.updateScene(nextData);
           lastSerialized.current = "";
           latestSerialized.current = contents;
+          lastTheme.current = getTheme(scene.appState);
 
           loadingTimer.current = window.setTimeout(() => {
             if (api.current) {
@@ -160,6 +176,12 @@ function App() {
           api.current = nextApi;
         }}
         onChange={(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>) => {
+          const theme = getTheme(appState);
+          if (!loadingScene.current && lastTheme.current && theme !== lastTheme.current) {
+            window.intellijExcalidraw?.themeChanged(theme);
+          }
+          lastTheme.current = theme;
+
           const serialized = serializeScene(elements, appState, files);
 
           if (loadingScene.current || !lastSerialized.current) {

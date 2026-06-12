@@ -23,6 +23,7 @@ frontend/.vite/
 *.keystore
 .env
 .env.*
+.local/
 
 !gradle/wrapper/gradle-wrapper.jar
 

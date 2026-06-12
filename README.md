@@ -20,15 +20,21 @@ Platform Gradle Plugin 2.x. It is not a fork of an older Excalidraw plugin.
 - Load drawings created by Excalidraw and other compatible editors.
 - Sync canvas changes into the IDE document automatically.
 - Save through `Ctrl+S` / `Cmd+S`, Save All, or normal IDE autosave.
+- Remember the last manually selected Excalidraw theme for new drawings.
 - Keep drawings local, portable, and version-control friendly.
 - Run without a cloud account.
 
 Canvas changes are sent to the IDE document after a short debounce. They become
 persisted on disk when the IDE saves the document.
 
+Existing drawings keep their saved light or dark theme. When a drawing has no
+saved theme, the editor uses the last theme manually selected in Excalidraw.
+Before a theme has been selected, new drawings follow the IDE appearance. The
+preference is stored in the user's IDE settings and shared across projects.
+
 ## Compatibility
 
-The current `0.2.3` release requires JetBrains Platform build `253`,
+The current `0.2.4` release requires JetBrains Platform build `253`,
 corresponding to JetBrains IDEs version `2025.3`, or newer. No upper build limit
 is declared. Compatibility with newer IDE releases should be checked with
 Plugin Verifier before publishing each release.
@@ -38,8 +44,9 @@ with normal JetBrains IDE installations.
 
 JetBrains Marketplace determines the supported-product list from the declared
 IntelliJ Platform modules. JetBrains Gateway itself is not supported because it
-does not provide the JSON language module; remote-development hosts and
-JetBrains Client are listed separately by Marketplace.
+does not provide the general language module used by the file type integration;
+remote-development hosts and JetBrains Client are listed separately by
+Marketplace.
 
 ## Current Stack
 
@@ -235,6 +242,12 @@ On Windows PowerShell, quote the property argument:
 
 ```powershell
 .\gradlew.bat verifyPlugin '-PplatformVersion=2026.1'
+```
+
+The development target can also be changed from IntelliJ IDEA to GoLand:
+
+```powershell
+.\gradlew.bat verifyPlugin '-PplatformProduct=goland' '-PplatformVersion=2026.1'
 ```
 
 For a signed release, also run `./gradlew verifyPluginSignature`.

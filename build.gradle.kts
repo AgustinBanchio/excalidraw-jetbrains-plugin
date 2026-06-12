@@ -6,9 +6,10 @@ plugins {
 }
 
 group = "com.agustinbanchio"
-version = "0.2.3"
+version = "0.2.4"
 
 val platformVersion = providers.gradleProperty("platformVersion")
+val platformProduct = providers.gradleProperty("platformProduct").orElse("idea")
 val platformSinceBuild = providers.gradleProperty("platformSinceBuild")
 val npmExecutable = if (System.getProperty("os.name").lowercase().contains("windows")) "npm.cmd" else "npm"
 val frontendDir = layout.projectDirectory.dir("frontend")
@@ -17,9 +18,11 @@ val pluginSigningDir = providers.environmentVariable("PLUGIN_SIGNING_DIR")
 
 dependencies {
     intellijPlatform {
-        intellijIdea(platformVersion)
-        bundledPlugin("com.intellij.java")
-        bundledPlugin("com.intellij.modules.json")
+        when (platformProduct.get()) {
+            "goland" -> goland(platformVersion)
+            "idea" -> intellijIdea(platformVersion)
+            else -> error("Unsupported platformProduct: ${platformProduct.get()}")
+        }
         pluginVerifier()
     }
 }

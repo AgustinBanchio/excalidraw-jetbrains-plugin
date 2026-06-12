@@ -23,6 +23,7 @@
             <li>Load drawings created by Excalidraw and other compatible editors.</li>
             <li>Automatically sync canvas changes into the IDE document.</li>
             <li>Save through the IDE using Save, Save All, and normal IDE save behavior.</li>
+            <li>Remember the last manually selected Excalidraw theme for new drawings.</li>
             <li>Keep drawings local and version-control friendly.</li>
             <li>Run the bundled editor without requiring a cloud account.</li>
         </ul>
@@ -34,6 +35,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>0.2.4</h3>
+        <ul>
+            <li>Fixed repeated parser initialization exceptions in GoLand and other JetBrains IDEs.</li>
+            <li>Removed the fragile dependency on JetBrains' JSON plugin and internal JSON PSI implementation.</li>
+            <li>Added a platform-only Excalidraw parser that keeps drawings opaque to IDE indexing.</li>
+            <li>Remembered the last manually selected Excalidraw theme for new drawings.</li>
+            <li>Added repeatable IntelliJ IDEA and GoLand verification targets.</li>
+        </ul>
+
         <h3>0.2.3</h3>
         <ul>
             <li>Fixed JCEF resource-handler compatibility with upcoming JetBrains Platform 262 builds.</li>
@@ -70,8 +80,7 @@
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.json</depends>
-
+    <depends>com.intellij.modules.lang</depends>
     <extensions defaultExtensionNs="com.intellij">
         <internalFileTemplate name="Excalidraw Drawing"/>
 
@@ -86,7 +95,7 @@
 
         <lang.parserDefinition
             language="Excalidraw"
-            implementationClass="com.agustinbanchio.excalidraw.file.ExcalidrawJsonParserDefinition"/>
+            implementationClass="com.agustinbanchio.excalidraw.file.ExcalidrawParserDefinition"/>
 
         <scratch.creationHelper
             language="Excalidraw"
