@@ -34,7 +34,7 @@ preference is stored in the user's IDE settings and shared across projects.
 
 ## Compatibility
 
-The current `0.2.4` release requires JetBrains Platform build `253`,
+The current `0.2.5` release requires JetBrains Platform build `253`,
 corresponding to JetBrains IDEs version `2025.3`, or newer. No upper build limit
 is declared. Compatibility with newer IDE releases should be checked with
 Plugin Verifier before publishing each release.
@@ -50,8 +50,8 @@ Marketplace.
 
 ## Current Stack
 
-- Kotlin `2.3.21` and JVM toolchain 21.
-- Gradle `9.3.0`.
+- Kotlin `2.4.0` and JVM toolchain 21.
+- Gradle `9.5.1`.
 - IntelliJ Platform Gradle Plugin `2.16.0`.
 - IntelliJ IDEA `2025.3` as the development platform.
 - JCEF for the embedded web editor.

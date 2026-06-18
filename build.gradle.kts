@@ -1,12 +1,12 @@
 import java.io.File
 
 plugins {
-    kotlin("jvm") version "2.3.21"
+    kotlin("jvm") version "2.4.0"
     id("org.jetbrains.intellij.platform")
 }
 
 group = "com.agustinbanchio"
-version = "0.2.4"
+version = "0.2.5"
 
 val platformVersion = providers.gradleProperty("platformVersion")
 val platformProduct = providers.gradleProperty("platformProduct").orElse("idea")
