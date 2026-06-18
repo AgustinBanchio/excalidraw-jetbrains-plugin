@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { Excalidraw, serializeAsJSON } from "@excalidraw/excalidraw";
+import { Excalidraw, serializeAsJSON, useHandleLibrary } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import "./styles.css";
 
@@ -9,6 +9,7 @@ type Bridge = {
   sceneChanged: (payload: string) => void;
   save: (payload: string) => void;
   themeChanged: (payload: Theme) => void;
+  browseLibrary: (url: string) => void;
 };
 
 declare global {
@@ -101,6 +102,34 @@ function notifyWhenBridgeIsReady() {
   window.addEventListener("intellij-excalidraw-bridge-ready", sendReady, { once: true });
 }
 
+function useLibraryBrowserNavigation() {
+  React.useEffect(() => {
+    window.name = window.name || "excalidraw_jetbrains_editor";
+
+    const onClick = (event: MouseEvent) => {
+      const browseButton = (event.target as Element | null)?.closest<HTMLAnchorElement>(
+        ".library-menu-browse-button"
+      );
+
+      if (!browseButton?.href) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (window.intellijExcalidraw?.browseLibrary) {
+        window.intellijExcalidraw.browseLibrary(browseButton.href);
+        return;
+      }
+
+      window.open(browseButton.href, "_blank", "noopener,noreferrer");
+    };
+
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+}
+
 function addHelpDialogAttribution() {
   const helpDialog = document.querySelector(".excalidraw .Dialog.HelpDialog");
   const header = helpDialog?.querySelector(".HelpDialog__header");
@@ -125,8 +154,10 @@ function useHelpDialogAttribution() {
     return () => observer.disconnect();
   }, []);
 }
+
 function App() {
   const [initialData, setInitialData] = React.useState<Scene>(EMPTY_SCENE);
+  const [excalidrawApi, setExcalidrawApi] = React.useState<any>(null);
   const api = React.useRef<any>(null);
   const lastSerialized = React.useRef<string>("");
   const latestSerialized = React.useRef<string>(JSON.stringify(EMPTY_SCENE, null, 2));
@@ -135,7 +166,9 @@ function App() {
   const loadingScene = React.useRef(false);
   const lastTheme = React.useRef<Theme | undefined>(undefined);
 
+  useLibraryBrowserNavigation();
   useHelpDialogAttribution();
+  useHandleLibrary({ excalidrawAPI: excalidrawApi });
 
   React.useEffect(() => {
     window.excalidrawPlugin = {
@@ -200,8 +233,10 @@ function App() {
     <div className="editor-shell">
       <Excalidraw
         initialData={initialData as any}
+        libraryReturnUrl={`${window.location.origin}${window.location.pathname}`}
         excalidrawAPI={(nextApi: any) => {
           api.current = nextApi;
+          setExcalidrawApi(nextApi);
         }}
         onChange={(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>) => {
           const theme = getTheme(appState);

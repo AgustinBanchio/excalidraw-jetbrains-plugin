@@ -15,6 +15,12 @@
             commit, review, and share with the rest of your codebase.
         </p>
 
+        <p>
+            The plugin bundles the latest Excalidraw React editor and is built for
+            current JetBrains IDE releases, while keeping compatibility with recent
+            IntelliJ Platform versions.
+        </p>
+
         <h3>Features</h3>
         <ul>
             <li>Open and edit <code>.excalidraw</code> files in a dedicated editor tab.</li>
@@ -35,6 +41,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>0.2.5 - 18/06/2026</h3>
+        <ul>
+            <li>Updated Gradle, Kotlin, and frontend dependency lockfiles.</li>
+            <li>Applied security updates for bundled frontend transitive dependencies.</li>
+            <li>Fixed Excalidraw public library browsing from the embedded editor.</li>
+      </ul>
+
         <h3>0.2.4</h3>
         <ul>
             <li>Fixed repeated parser initialization exceptions in GoLand and other JetBrains IDEs.</li>

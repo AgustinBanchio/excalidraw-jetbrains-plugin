@@ -146,7 +146,43 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
 
             return try {
                 val uri = URI(url)
-                uri.scheme == "https" && uri.host == DOMAIN && uri.port == -1
+                uri.scheme.equals("https", ignoreCase = true) && uri.host.equals(DOMAIN, ignoreCase = true) && uri.port == -1
+            } catch (_: IllegalArgumentException) {
+                false
+            }
+        }
+
+        fun isTrustedLibraryReturnUrl(url: String?): Boolean {
+            if (url == null) return false
+
+            return try {
+                val uri = URI(url)
+                isTrustedFrontendUrl(url) &&
+                    (uri.path.isNullOrBlank() || uri.path == "/" || uri.path == "/index.html") &&
+                    ((uri.fragment ?: "").contains("addLibrary=") || (uri.query ?: "").contains("addLibrary="))
+            } catch (_: IllegalArgumentException) {
+                false
+            }
+        }
+
+        fun isAllowedLibraryBrowserUrl(url: String?): Boolean {
+            if (url == null) return false
+
+            return try {
+                val uri = URI(url)
+                uri.scheme.equals("https", ignoreCase = true) &&
+                    uri.host.equals("libraries.excalidraw.com", ignoreCase = true)
+            } catch (_: IllegalArgumentException) {
+                false
+            }
+        }
+
+        fun isAllowedLibraryDownloadUrl(url: String?): Boolean {
+            if (url == null) return false
+
+            return try {
+                val uri = URI(url)
+                isAllowedLibraryBrowserUrl(url) && uri.path.endsWith(".excalidrawlib", ignoreCase = true)
             } catch (_: IllegalArgumentException) {
                 false
             }
