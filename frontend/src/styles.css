@@ -15,3 +15,12 @@ body {
   width: 100%;
   height: 100%;
 }
+
+.excalidraw-plugin-help-attribution {
+  margin: 0.85rem 0 1.25rem;
+  color: var(--text-primary-color);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  opacity: 0.72;
+  text-align: left;
+}

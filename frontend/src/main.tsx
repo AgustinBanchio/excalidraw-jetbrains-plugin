@@ -40,6 +40,8 @@ const EMPTY_SCENE: Scene = {
   files: {}
 };
 
+const HELP_ATTRIBUTION_TEXT = "JetBrains Excalidraw Editor by Agustin Banchio";
+
 function parseScene(contents: string, preferredTheme: Theme): Scene {
   if (!contents.trim()) {
     return {
@@ -99,6 +101,30 @@ function notifyWhenBridgeIsReady() {
   window.addEventListener("intellij-excalidraw-bridge-ready", sendReady, { once: true });
 }
 
+function addHelpDialogAttribution() {
+  const helpDialog = document.querySelector(".excalidraw .Dialog.HelpDialog");
+  const header = helpDialog?.querySelector(".HelpDialog__header");
+
+  if (!helpDialog || !header || helpDialog.querySelector(".excalidraw-plugin-help-attribution")) {
+    return;
+  }
+
+  const attribution = document.createElement("div");
+  attribution.className = "excalidraw-plugin-help-attribution";
+  attribution.textContent = HELP_ATTRIBUTION_TEXT;
+  header.insertAdjacentElement("afterend", attribution);
+}
+
+function useHelpDialogAttribution() {
+  React.useEffect(() => {
+    addHelpDialogAttribution();
+
+    const observer = new MutationObserver(addHelpDialogAttribution);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+}
 function App() {
   const [initialData, setInitialData] = React.useState<Scene>(EMPTY_SCENE);
   const api = React.useRef<any>(null);
@@ -108,6 +134,8 @@ function App() {
   const loadingTimer = React.useRef<number | undefined>(undefined);
   const loadingScene = React.useRef(false);
   const lastTheme = React.useRef<Theme | undefined>(undefined);
+
+  useHelpDialogAttribution();
 
   React.useEffect(() => {
     window.excalidrawPlugin = {
