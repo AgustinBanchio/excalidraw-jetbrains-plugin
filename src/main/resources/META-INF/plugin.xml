@@ -22,7 +22,7 @@
             <li>Use the familiar Excalidraw drawing tools without leaving the IDE.</li>
             <li>Load drawings created by Excalidraw and other compatible editors.</li>
             <li>Automatically sync canvas changes into the IDE document.</li>
-            <li>Save through the IDE using Save, Save All, and normal IDE save behavior.</li>
+            <li>Save through the IDE using Save, Save All, and normal IDE save behaviour.</li>
             <li>Remember the last manually selected Excalidraw theme for new drawings.</li>
             <li>Keep drawings local and version-control friendly.</li>
             <li>Run the bundled editor without requiring a cloud account.</li>
@@ -42,54 +42,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.2.5 - 18/06/2026</h3>
+        <h3>0.2.6 - 2026-06-19</h3>
         <ul>
-            <li>Updated Gradle, Kotlin, and frontend dependency lockfiles.</li>
-            <li>Applied security updates for bundled frontend transitive dependencies.</li>
-            <li>Fixed Excalidraw public library browsing from the embedded editor.</li>
-      </ul>
-
-        <h3>0.2.4</h3>
-        <ul>
-            <li>Fixed repeated parser initialization exceptions in GoLand and other JetBrains IDEs.</li>
-            <li>Removed the fragile dependency on JetBrains' JSON plugin and internal JSON PSI implementation.</li>
-            <li>Added a platform-only Excalidraw parser that keeps drawings opaque to IDE indexing.</li>
-            <li>Remembered the last manually selected Excalidraw theme for new drawings.</li>
-            <li>Added repeatable IntelliJ IDEA and GoLand verification targets.</li>
-        </ul>
-
-        <h3>0.2.3</h3>
-        <ul>
-            <li>Fixed JCEF resource-handler compatibility with upcoming JetBrains Platform 262 builds.</li>
-            <li>Removed deprecated JCEF resource-handler API usage reported by Marketplace verification.</li>
-            <li>Kept one plugin artifact compatible with JetBrains Platform builds 253, 261, and 262.</li>
-        </ul>
-
-        <h3>0.2.2</h3>
-        <ul>
-            <li>Allowed installation on newer JetBrains IDE releases by removing the artificial upper build limit.</li>
-            <li>Hardened the JCEF editor bridge against untrusted navigation and resource paths.</li>
-            <li>Bundled the project license and third-party notices in the distributed plugin.</li>
-            <li>Removed bundled Kotlin standard-library duplication and improved repository secret exclusions.</li>
-        </ul>
-
-        <h3>0.2.1</h3>
-        <ul>
-            <li>Added Excalidraw Drawing to the IDE's New menu.</li>
-            <li>Added initialized Excalidraw scratch-file creation.</li>
-            <li>Registered Excalidraw as a JSON-compatible language and file type.</li>
-            <li>Fixed parser and file-template compatibility with recent JetBrains IDEs.</li>
-        </ul>
-
-        <h3>0.2.0</h3>
-        <ul>
-            <li>Fixed Excalidraw file type registration on recent JetBrains IDEs.</li>
-            <li>Fixed custom editor compatibility with the current FileEditor API.</li>
-            <li>Prevented opening a drawing from modifying it during Excalidraw's load-time normalization.</li>
-            <li>Updated Excalidraw, React, Vite, TypeScript, and supporting frontend dependencies.</li>
-            <li>Added Marketplace-ready plugin description and current Excalidraw icons.</li>
-            <li>Added environment-based plugin signing support.</li>
-            <li>Improved release, verification, installation, and development documentation.</li>
+            <li>Prevented invalid drawings and stale queued scene updates from overwriting current file contents.</li>
+            <li>Hardened external navigation, embedded content handling, library downloads, and invalid-scene behavior.</li>
+            <li>Corrected synchronous JCEF resource handling for newer JetBrains Platform versions.</li>
+            <li>Removed obsolete frontend assets during packaging and added complete generated third-party notices.</li>
+            <li>Added frontend and Kotlin tests plus automated IntelliJ IDEA and GoLand compatibility verification.</li>
         </ul>
     ]]></change-notes>
 
