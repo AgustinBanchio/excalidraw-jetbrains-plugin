@@ -34,6 +34,10 @@ preference is stored in the user's IDE settings and shared across projects.
 
 ## Compatibility
 
+Only one installed plugin should register the `.excalidraw` file type. Disable
+or uninstall other Excalidraw editor plugins before enabling this plugin to
+avoid file-type and editor conflicts.
+
 The current `0.2.5` release requires JetBrains Platform build `253`,
 corresponding to JetBrains IDEs version `2025.3`, or newer. No upper build limit
 is declared. Compatibility with newer IDE releases should be checked with

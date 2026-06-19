@@ -15,12 +15,6 @@
             commit, review, and share with the rest of your codebase.
         </p>
 
-        <p>
-            The plugin bundles the latest Excalidraw React editor and is built for
-            current JetBrains IDE releases, while keeping compatibility with recent
-            IntelliJ Platform versions.
-        </p>
-
         <h3>Features</h3>
         <ul>
             <li>Open and edit <code>.excalidraw</code> files in a dedicated editor tab.</li>
@@ -33,6 +27,13 @@
             <li>Keep drawings local and version-control friendly.</li>
             <li>Run the bundled editor without requiring a cloud account.</li>
         </ul>
+
+        <h3>Compatibility note</h3>
+        <p>
+            Only one installed plugin should register the <code>.excalidraw</code>
+            file type. Disable or uninstall other Excalidraw editor plugins before
+            enabling this plugin to avoid file-type and editor conflicts.
+        </p>
 
         <p>
             Free and open source. This is an unofficial community plugin and is not
