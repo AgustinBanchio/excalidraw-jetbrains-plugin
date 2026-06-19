@@ -170,8 +170,13 @@ After changing dependencies, update the lockfile and verify the frontend:
 cd frontend
 npm outdated
 npm audit --omit=dev
+npm run licenses
 npm run build
 ```
+
+`npm run licenses` regenerates the committed `THIRD_PARTY_NOTICES.md` from
+the locked production dependency graph. Gradle's `check` task verifies that
+the notice remains current.
 
 ## Build and Install Locally
 

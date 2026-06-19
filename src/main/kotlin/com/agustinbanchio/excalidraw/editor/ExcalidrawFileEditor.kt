@@ -68,14 +68,16 @@ class ExcalidrawFileEditor(
     private val readyQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val sceneChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val saveQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val saveCurrentDocumentQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val themeChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val browseLibraryQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val openExternalLinkQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val sceneUpdateAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private var disposed = false
-    private var lastPushedText: String? = null
+    private var documentRevision = 1L
+    private var applyingFrontendScene = false
     @Volatile
-    private var pendingScenePayload: String? = null
+    private var pendingSceneUpdate: PendingSceneUpdate? = null
 
     init {
         setupJsBridge()
@@ -114,6 +116,7 @@ class ExcalidrawFileEditor(
         Disposer.dispose(readyQuery)
         Disposer.dispose(sceneChangedQuery)
         Disposer.dispose(saveQuery)
+        Disposer.dispose(saveCurrentDocumentQuery)
         Disposer.dispose(themeChangedQuery)
         Disposer.dispose(browseLibraryQuery)
         Disposer.dispose(openExternalLinkQuery)
@@ -133,16 +136,24 @@ class ExcalidrawFileEditor(
         sceneChangedQuery.addHandler { payload ->
             if (!isTrustedFrontend()) return@addHandler null
 
-            queueFrontendScene(payload)
+            runOnEdt { queueFrontendScene(payload, saveImmediately = false) }
             null
         }
 
         saveQuery.addHandler { payload ->
             if (!isTrustedFrontend()) return@addHandler null
 
-            pendingScenePayload = payload
-            sceneUpdateAlarm.cancelAllRequests()
-            runOnEdt { flushPendingFrontendScene(saveAfterUpdate = true) }
+            runOnEdt { queueFrontendScene(payload, saveImmediately = true) }
+            null
+        }
+
+        saveCurrentDocumentQuery.addHandler {
+            if (!isTrustedFrontend()) return@addHandler null
+
+            runOnEdt {
+                cancelPendingFrontendScene()
+                saveDocument()
+            }
             null
         }
 
@@ -228,10 +239,11 @@ class ExcalidrawFileEditor(
             object : DocumentListener {
                 override fun documentChanged(event: DocumentEvent) {
                     propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
-                    val text = document.text
-                    if (text != lastPushedText) {
-                        pushDocumentToFrontend()
-                    }
+                    if (applyingFrontendScene) return
+
+                    documentRevision++
+                    cancelPendingFrontendScene()
+                    pushDocumentToFrontend()
                 }
             },
             this,
@@ -255,6 +267,7 @@ class ExcalidrawFileEditor(
               ready: function(payload) { ${readyQuery.inject("payload")} },
               sceneChanged: function(payload) { ${sceneChangedQuery.inject("payload")} },
               save: function(payload) { ${saveQuery.inject("payload")} },
+              saveCurrentDocument: function() { ${saveCurrentDocumentQuery.inject("''")} },
               themeChanged: function(payload) { ${themeChangedQuery.inject("payload")} },
               browseLibrary: function(payload) { ${browseLibraryQuery.inject("payload")} },
               openExternalLink: function(payload) { ${openExternalLinkQuery.inject("payload")} }
@@ -268,17 +281,27 @@ class ExcalidrawFileEditor(
         if (disposed || !isTrustedFrontend()) return
         val text = document.text
         val preferredTheme = ExcalidrawThemeSettings.getInstance().preferredTheme
-        lastPushedText = text
         executeJavaScript(
-            "window.excalidrawPlugin?.loadFile(${text.toJavaScriptStringLiteral()}, ${preferredTheme.toJavaScriptStringLiteral()});",
+            "window.excalidrawPlugin?.loadFile(${text.toJavaScriptStringLiteral()}, ${preferredTheme.toJavaScriptStringLiteral()}, $documentRevision);",
         )
     }
 
-    private fun queueFrontendScene(payload: String) {
+    private fun queueFrontendScene(encodedUpdate: String, saveImmediately: Boolean) {
         if (disposed || !isTrustedFrontend()) return
 
-        pendingScenePayload = payload
+        val update = PendingSceneUpdate.decode(encodedUpdate) ?: return
+        if (update.revision != documentRevision) {
+            if (saveImmediately) saveDocument()
+            return
+        }
+
+        pendingSceneUpdate = update
         sceneUpdateAlarm.cancelAllRequests()
+        if (saveImmediately) {
+            flushPendingFrontendScene(saveAfterUpdate = true)
+            return
+        }
+
         sceneUpdateAlarm.addRequest(
             { flushPendingFrontendScene(saveAfterUpdate = false) },
             SCENE_UPDATE_DELAY_MS,
@@ -292,9 +315,16 @@ class ExcalidrawFileEditor(
             return
         }
 
-        val payload = pendingScenePayload ?: return
-        pendingScenePayload = null
-        applyFrontendScene(payload, saveAfterUpdate)
+        val update = pendingSceneUpdate ?: return
+        pendingSceneUpdate = null
+        if (update.revision != documentRevision) return
+
+        applyFrontendScene(update.scene, saveAfterUpdate)
+    }
+
+    private fun cancelPendingFrontendScene() {
+        sceneUpdateAlarm.cancelAllRequests()
+        pendingSceneUpdate = null
     }
 
     private fun applyFrontendScene(payload: String, saveAfterUpdate: Boolean) {
@@ -304,8 +334,12 @@ class ExcalidrawFileEditor(
         }
 
         WriteCommandAction.runWriteCommandAction(project, Runnable {
-            lastPushedText = payload
-            document.setText(payload)
+            applyingFrontendScene = true
+            try {
+                document.setText(payload)
+            } finally {
+                applyingFrontendScene = false
+            }
         })
 
         propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
@@ -408,6 +442,21 @@ class ExcalidrawFileEditor(
             }
         }
         append('"')
+    }
+
+    private data class PendingSceneUpdate(
+        val revision: Long,
+        val scene: String,
+    ) {
+        companion object {
+            fun decode(value: String): PendingSceneUpdate? {
+                val separator = value.indexOf('\n')
+                if (separator <= 0) return null
+
+                val revision = value.substring(0, separator).toLongOrNull() ?: return null
+                return PendingSceneUpdate(revision, value.substring(separator + 1))
+            }
+        }
     }
 
     private object NoState : FileEditorState {

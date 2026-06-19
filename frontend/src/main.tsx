@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Excalidraw, serializeAsJSON, useHandleLibrary } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
+import { EditorDocumentState, encodeSceneUpdate } from "./documentState";
 import { EMPTY_SCENE, getTheme, parseScene, sanitizeAppState, type Scene, type Theme } from "./scene";
 import "./styles.css";
 
@@ -9,6 +10,7 @@ type Bridge = {
   ready: (payload: string) => void;
   sceneChanged: (payload: string) => void;
   save: (payload: string) => void;
+  saveCurrentDocument: () => void;
   themeChanged: (payload: Theme) => void;
   browseLibrary: (url: string) => void;
   openExternalLink: (url: string) => void;
@@ -18,7 +20,7 @@ declare global {
   interface Window {
     intellijExcalidraw?: Bridge;
     excalidrawPlugin?: {
-      loadFile: (contents: string, preferredTheme: Theme) => void;
+      loadFile: (contents: string, preferredTheme: Theme, revision: number) => void;
     };
   }
 }
@@ -147,8 +149,8 @@ function App() {
   const [excalidrawApi, setExcalidrawApi] = React.useState<any>(null);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const api = React.useRef<any>(null);
+  const documentState = React.useRef(new EditorDocumentState());
   const lastSerialized = React.useRef<string>("");
-  const latestSerialized = React.useRef<string>(JSON.stringify(EMPTY_SCENE, null, 2));
   const loadingTimer = React.useRef<number | undefined>(undefined);
   const loadingScene = React.useRef(false);
   const lastTheme = React.useRef<Theme | undefined>(undefined);
@@ -160,11 +162,13 @@ function App() {
 
   React.useEffect(() => {
     window.excalidrawPlugin = {
-      loadFile(contents: string, preferredTheme: Theme) {
-        try {
-          window.clearTimeout(loadingTimer.current);
-          loadingScene.current = true;
+      loadFile(contents: string, preferredTheme: Theme, revision: number) {
+        window.clearTimeout(loadingTimer.current);
+        loadingScene.current = true;
+        lastSerialized.current = "";
+        documentState.current.beginLoad(revision);
 
+        try {
           const scene = parseScene(contents, preferredTheme);
           const nextData = {
             elements: scene.elements,
@@ -175,8 +179,7 @@ function App() {
           setInitialData(nextData);
           setLoadError(null);
           api.current?.updateScene(nextData);
-          lastSerialized.current = "";
-          latestSerialized.current = contents;
+          documentState.current.completeLoad(contents);
           lastTheme.current = getTheme(scene.appState);
 
           loadingTimer.current = window.setTimeout(() => {
@@ -209,7 +212,12 @@ function App() {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        window.intellijExcalidraw?.save(latestSerialized.current);
+        const update = documentState.current.currentUpdate();
+        if (update) {
+          window.intellijExcalidraw?.save(encodeSceneUpdate(update));
+        } else {
+          window.intellijExcalidraw?.saveCurrentDocument();
+        }
       }
     };
 
@@ -243,6 +251,10 @@ function App() {
             setExcalidrawApi(nextApi);
           }}
           onChange={(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>) => {
+            if (!documentState.current.currentUpdate()) {
+              return;
+            }
+
             const theme = getTheme(appState);
             if (!loadingScene.current && lastTheme.current && theme !== lastTheme.current) {
               window.intellijExcalidraw?.themeChanged(theme);
@@ -260,9 +272,12 @@ function App() {
               return;
             }
 
-            latestSerialized.current = serialized;
             lastSerialized.current = serialized;
-            window.intellijExcalidraw?.sceneChanged(serialized);
+            documentState.current.updateScene(serialized);
+            const update = documentState.current.currentUpdate();
+            if (update) {
+              window.intellijExcalidraw?.sceneChanged(encodeSceneUpdate(update));
+            }
           }}
         />
       )}

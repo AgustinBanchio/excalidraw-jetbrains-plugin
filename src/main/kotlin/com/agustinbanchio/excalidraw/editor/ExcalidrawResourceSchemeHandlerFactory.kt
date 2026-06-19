@@ -19,6 +19,18 @@ import java.lang.reflect.Proxy
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
 
+internal object CefResourceRequestContract {
+    fun processRequest(continueRequest: () -> Unit): Boolean {
+        continueRequest()
+        return true
+    }
+
+    fun open(setHandleRequest: (Boolean) -> Unit): Boolean {
+        setHandleRequest(true)
+        return true
+    }
+}
+
 class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
     override fun create(browser: CefBrowser, frame: CefFrame, schemeName: String, request: CefRequest): CefResourceHandler {
         val uri = URI(request.url)
@@ -52,15 +64,11 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
             }
         }
 
-        private fun processRequest(args: Array<out Any?>): Boolean {
-            (args[1] as CefCallback).Continue()
-            return true
-        }
+        private fun processRequest(args: Array<out Any?>): Boolean =
+            CefResourceRequestContract.processRequest { (args[1] as CefCallback).Continue() }
 
-        private fun open(args: Array<out Any?>): Boolean {
-            setRef(args[1], true)
-            return false
-        }
+        private fun open(args: Array<out Any?>): Boolean =
+            CefResourceRequestContract.open { setRef(args[1], it) }
 
         private fun getResponseHeaders(args: Array<out Any?>) {
             val response = args[0] as CefResponse
