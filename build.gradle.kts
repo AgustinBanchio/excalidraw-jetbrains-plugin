@@ -71,6 +71,17 @@ tasks {
         outputs.dir(frontendDir.dir("dist"))
     }
 
+    register<Exec>("testFrontend") {
+        group = "verification"
+        description = "Runs the frontend unit tests."
+        dependsOn("npmInstallFrontend")
+        workingDir = frontendDir.asFile
+        commandLine(npmExecutable, "test")
+        inputs.dir(frontendDir.dir("src"))
+        inputs.file(frontendDir.file("package.json"))
+        inputs.file(frontendDir.file("package-lock.json"))
+    }
+
     register<Copy>("copyFrontendResources") {
         group = "frontend"
         description = "Copies built frontend assets into generated plugin resources."
@@ -98,5 +109,9 @@ tasks {
 
     verifyPluginSignature {
         dependsOn(signPlugin)
+    }
+
+    check {
+        dependsOn("testFrontend")
     }
 }

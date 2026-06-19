@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Excalidraw, serializeAsJSON, useHandleLibrary } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
+import { EMPTY_SCENE, getTheme, parseScene, sanitizeAppState, type Scene, type Theme } from "./scene";
 import "./styles.css";
 
 type Bridge = {
@@ -10,6 +11,7 @@ type Bridge = {
   save: (payload: string) => void;
   themeChanged: (payload: Theme) => void;
   browseLibrary: (url: string) => void;
+  openExternalLink: (url: string) => void;
 };
 
 declare global {
@@ -21,66 +23,7 @@ declare global {
   }
 }
 
-type Theme = "light" | "dark";
-
-type Scene = {
-  type?: string;
-  version?: number;
-  source?: string;
-  elements?: readonly unknown[];
-  appState?: Record<string, unknown>;
-  files?: Record<string, unknown>;
-};
-
-const EMPTY_SCENE: Scene = {
-  type: "excalidraw",
-  version: 2,
-  source: "https://github.com/agustinbanchio/excalidraw-jetbrains-plugin",
-  elements: [],
-  appState: {},
-  files: {}
-};
-
 const HELP_ATTRIBUTION_TEXT = "JetBrains Excalidraw Editor by Agustin Banchio";
-
-function parseScene(contents: string, preferredTheme: Theme): Scene {
-  if (!contents.trim()) {
-    return {
-      ...EMPTY_SCENE,
-      appState: { theme: preferredTheme }
-    };
-  }
-
-  const parsed = JSON.parse(contents) as Scene;
-  const appState = sanitizeAppState(parsed.appState ?? {});
-  return {
-    ...EMPTY_SCENE,
-    ...parsed,
-    elements: Array.isArray(parsed.elements) ? parsed.elements : [],
-    appState: {
-      theme: preferredTheme,
-      ...appState
-    },
-    files: parsed.files ?? {}
-  };
-}
-
-function getTheme(appState: unknown): Theme {
-  return (appState as Record<string, unknown> | undefined)?.theme === "dark" ? "dark" : "light";
-}
-
-function sanitizeAppState(appState: Record<string, unknown>): Record<string, unknown> {
-  const {
-    collaborators,
-    selectedElementIds,
-    editingElement,
-    resizingElement,
-    draggingElement,
-    ...rest
-  } = appState;
-
-  return rest;
-}
 
 function serializeScene(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>): string {
   return serializeAsJSON(
@@ -130,6 +73,50 @@ function useLibraryBrowserNavigation() {
   }, []);
 }
 
+function openExternalLink(url: string) {
+  try {
+    const parsed = new URL(url, window.location.href);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return;
+    }
+
+    if (window.intellijExcalidraw?.openExternalLink) {
+      window.intellijExcalidraw.openExternalLink(parsed.href);
+    } else {
+      window.open(parsed.href, "_blank", "noopener,noreferrer");
+    }
+  } catch {
+    // Ignore malformed or unsupported links.
+  }
+}
+
+function useExternalLinkNavigation() {
+  React.useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      const anchor = (event.target as Element | null)?.closest<HTMLAnchorElement>("a[href]");
+      if (!anchor || anchor.matches(".library-menu-browse-button")) {
+        return;
+      }
+
+      try {
+        const parsed = new URL(anchor.href, window.location.href);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        openExternalLink(parsed.href);
+      } catch {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
+}
+
 function addHelpDialogAttribution() {
   const helpDialog = document.querySelector(".excalidraw .Dialog.HelpDialog");
   const header = helpDialog?.querySelector(".HelpDialog__header");
@@ -158,15 +145,16 @@ function useHelpDialogAttribution() {
 function App() {
   const [initialData, setInitialData] = React.useState<Scene>(EMPTY_SCENE);
   const [excalidrawApi, setExcalidrawApi] = React.useState<any>(null);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
   const api = React.useRef<any>(null);
   const lastSerialized = React.useRef<string>("");
   const latestSerialized = React.useRef<string>(JSON.stringify(EMPTY_SCENE, null, 2));
-  const pendingTimer = React.useRef<number | undefined>(undefined);
   const loadingTimer = React.useRef<number | undefined>(undefined);
   const loadingScene = React.useRef(false);
   const lastTheme = React.useRef<Theme | undefined>(undefined);
 
   useLibraryBrowserNavigation();
+  useExternalLinkNavigation();
   useHelpDialogAttribution();
   useHandleLibrary({ excalidrawAPI: excalidrawApi });
 
@@ -174,7 +162,6 @@ function App() {
     window.excalidrawPlugin = {
       loadFile(contents: string, preferredTheme: Theme) {
         try {
-          window.clearTimeout(pendingTimer.current);
           window.clearTimeout(loadingTimer.current);
           loadingScene.current = true;
 
@@ -186,6 +173,7 @@ function App() {
           };
 
           setInitialData(nextData);
+          setLoadError(null);
           api.current?.updateScene(nextData);
           lastSerialized.current = "";
           latestSerialized.current = contents;
@@ -203,6 +191,7 @@ function App() {
           }, 100);
         } catch (error) {
           loadingScene.current = false;
+          setLoadError(error instanceof Error ? error.message : "The drawing could not be loaded.");
           console.error("Failed to load .excalidraw file", error);
         }
       }
@@ -211,7 +200,6 @@ function App() {
     notifyWhenBridgeIsReady();
 
     return () => {
-      window.clearTimeout(pendingTimer.current);
       window.clearTimeout(loadingTimer.current);
       delete window.excalidrawPlugin;
     };
@@ -230,40 +218,54 @@ function App() {
   }, []);
 
   return (
-    <div className="editor-shell">
-      <Excalidraw
-        initialData={initialData as any}
-        libraryReturnUrl={`${window.location.origin}${window.location.pathname}`}
-        excalidrawAPI={(nextApi: any) => {
-          api.current = nextApi;
-          setExcalidrawApi(nextApi);
-        }}
-        onChange={(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>) => {
-          const theme = getTheme(appState);
-          if (!loadingScene.current && lastTheme.current && theme !== lastTheme.current) {
-            window.intellijExcalidraw?.themeChanged(theme);
-          }
-          lastTheme.current = theme;
+    <div className={loadError ? "editor-shell editor-shell--error" : "editor-shell"}>
+      {loadError ? (
+        <div className="load-error" role="alert">
+          <h1>Unable to open this drawing</h1>
+          <p>{loadError}</p>
+          <p>The file has not been changed. Fix its JSON content and reopen it.</p>
+        </div>
+      ) : (
+        <Excalidraw
+          initialData={initialData as any}
+          libraryReturnUrl={`${window.location.origin}${window.location.pathname}`}
+          validateEmbeddable={false}
+          renderEmbeddable={() => null}
+          onLinkOpen={(element: unknown, event: Event) => {
+            const link = (element as { link?: unknown }).link;
+            if (typeof link === "string" && /^https?:\/\//i.test(link)) {
+              event.preventDefault();
+              openExternalLink(link);
+            }
+          }}
+          excalidrawAPI={(nextApi: any) => {
+            api.current = nextApi;
+            setExcalidrawApi(nextApi);
+          }}
+          onChange={(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>) => {
+            const theme = getTheme(appState);
+            if (!loadingScene.current && lastTheme.current && theme !== lastTheme.current) {
+              window.intellijExcalidraw?.themeChanged(theme);
+            }
+            lastTheme.current = theme;
 
-          const serialized = serializeScene(elements, appState, files);
+            const serialized = serializeScene(elements, appState, files);
 
-          if (loadingScene.current || !lastSerialized.current) {
-            lastSerialized.current = serialized;
-            return;
-          }
+            if (loadingScene.current || !lastSerialized.current) {
+              lastSerialized.current = serialized;
+              return;
+            }
 
-          if (serialized === lastSerialized.current) {
-            return;
-          }
+            if (serialized === lastSerialized.current) {
+              return;
+            }
 
-          latestSerialized.current = serialized;
-          window.clearTimeout(pendingTimer.current);
-          pendingTimer.current = window.setTimeout(() => {
+            latestSerialized.current = serialized;
             lastSerialized.current = serialized;
             window.intellijExcalidraw?.sceneChanged(serialized);
-          }, 350);
-        }}
-      />
+          }}
+        />
+      )}
     </div>
   );
 }

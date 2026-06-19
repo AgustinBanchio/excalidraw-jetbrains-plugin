@@ -48,7 +48,7 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
                 "toString" -> "ExcalidrawResourceHandler($path)"
                 "hashCode" -> System.identityHashCode(proxy)
                 "equals" -> proxy === arguments.firstOrNull()
-                else -> error("Unsupported CefResourceHandler method: ${method.name}")
+                else -> defaultReturnValue(method)
             }
         }
 
@@ -66,6 +66,7 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
             val response = args[0] as CefResponse
             response.mimeType = mimeType(path)
             response.status = if (stream == null) 404 else 200
+            setRef(args.getOrNull(1), -1)
         }
 
         private fun read(args: Array<out Any?>): Boolean {
@@ -114,6 +115,18 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
             reference?.javaClass?.methods
                 ?.firstOrNull { it.name == "set" && it.parameterCount == 1 }
                 ?.invoke(reference, value)
+        }
+
+        private fun defaultReturnValue(method: Method): Any? = when (method.returnType) {
+            java.lang.Boolean.TYPE -> false
+            java.lang.Byte.TYPE -> 0.toByte()
+            java.lang.Short.TYPE -> 0.toShort()
+            java.lang.Integer.TYPE -> 0
+            java.lang.Long.TYPE -> 0L
+            java.lang.Float.TYPE -> 0F
+            java.lang.Double.TYPE -> 0.0
+            java.lang.Character.TYPE -> '\u0000'
+            else -> null
         }
     }
 
@@ -171,7 +184,8 @@ class ExcalidrawResourceSchemeHandlerFactory : CefSchemeHandlerFactory {
             return try {
                 val uri = URI(url)
                 uri.scheme.equals("https", ignoreCase = true) &&
-                    uri.host.equals("libraries.excalidraw.com", ignoreCase = true)
+                    uri.host.equals("libraries.excalidraw.com", ignoreCase = true) &&
+                    uri.port == -1
             } catch (_: IllegalArgumentException) {
                 false
             }

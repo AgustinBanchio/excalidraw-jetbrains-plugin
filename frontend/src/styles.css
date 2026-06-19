@@ -16,6 +16,31 @@ body {
   height: 100%;
 }
 
+.editor-shell--error {
+  overflow: auto;
+  background: #ffffff;
+}
+
+.load-error {
+  box-sizing: border-box;
+  max-width: 720px;
+  margin: 48px auto;
+  padding: 24px;
+  background: #ffffff;
+  color: #1f2328;
+  font: 14px system-ui, sans-serif;
+}
+
+.load-error h1 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.load-error p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
 .excalidraw-plugin-help-attribution {
   margin: 0.85rem 0 1.25rem;
   color: var(--text-primary-color);

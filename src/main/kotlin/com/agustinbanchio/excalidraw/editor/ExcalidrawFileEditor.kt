@@ -1,6 +1,7 @@
 package com.agustinbanchio.excalidraw.editor
 
 import com.agustinbanchio.excalidraw.settings.ExcalidrawThemeSettings
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.command.WriteCommandAction
@@ -25,12 +26,14 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
+import com.intellij.util.Alarm
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefBeforeDownloadCallback
 import org.cef.callback.CefDownloadItem
 import org.cef.callback.CefDownloadItemCallback
 import org.cef.handler.CefDownloadHandlerAdapter
+import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefLoadHandlerAdapter
 import org.cef.handler.CefRequestHandlerAdapter
 import org.cef.network.CefRequest
@@ -47,6 +50,8 @@ import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 import javax.swing.JComponent
 import javax.swing.JLabel
@@ -65,8 +70,12 @@ class ExcalidrawFileEditor(
     private val saveQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val themeChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val browseLibraryQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val openExternalLinkQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val sceneUpdateAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private var disposed = false
     private var lastPushedText: String? = null
+    @Volatile
+    private var pendingScenePayload: String? = null
 
     init {
         setupJsBridge()
@@ -99,12 +108,15 @@ class ExcalidrawFileEditor(
     override fun getCurrentLocation(): FileEditorLocation? = null
 
     override fun dispose() {
+        sceneUpdateAlarm.cancelAllRequests()
+        flushPendingFrontendScene(saveAfterUpdate = false)
         disposed = true
         Disposer.dispose(readyQuery)
         Disposer.dispose(sceneChangedQuery)
         Disposer.dispose(saveQuery)
         Disposer.dispose(themeChangedQuery)
         Disposer.dispose(browseLibraryQuery)
+        Disposer.dispose(openExternalLinkQuery)
         Disposer.dispose(browser)
     }
 
@@ -121,14 +133,16 @@ class ExcalidrawFileEditor(
         sceneChangedQuery.addHandler { payload ->
             if (!isTrustedFrontend()) return@addHandler null
 
-            applyFrontendScene(payload, saveAfterUpdate = false)
+            queueFrontendScene(payload)
             null
         }
 
         saveQuery.addHandler { payload ->
             if (!isTrustedFrontend()) return@addHandler null
 
-            applyFrontendScene(payload, saveAfterUpdate = true)
+            pendingScenePayload = payload
+            sceneUpdateAlarm.cancelAllRequests()
+            runOnEdt { flushPendingFrontendScene(saveAfterUpdate = true) }
             null
         }
 
@@ -143,6 +157,19 @@ class ExcalidrawFileEditor(
             if (!isTrustedFrontend()) return@addHandler null
 
             openLibraryBrowser(url)
+            null
+        }
+
+        openExternalLinkQuery.addHandler { url ->
+            if (!isTrustedFrontend()) return@addHandler null
+
+            val uri = allowedExternalUri(url) ?: run {
+                thisLogger().warn("Blocked unsupported Excalidraw link: $url")
+                return@addHandler null
+            }
+            ApplicationManager.getApplication().invokeLater {
+                BrowserUtil.browse(uri)
+            }
             null
         }
 
@@ -166,8 +193,31 @@ class ExcalidrawFileEditor(
                     isRedirect: Boolean,
                 ): Boolean =
                     browser == this@ExcalidrawFileEditor.browser.cefBrowser &&
-                        frame.isMain &&
                         !ExcalidrawResourceSchemeHandlerFactory.isTrustedFrontendUrl(request.url)
+            },
+            browser.cefBrowser,
+        )
+
+        browser.jbCefClient.addLifeSpanHandler(
+            object : CefLifeSpanHandlerAdapter() {
+                override fun onBeforePopup(
+                    browser: CefBrowser,
+                    frame: CefFrame,
+                    targetUrl: String,
+                    targetFrameName: String,
+                ): Boolean = true
+            },
+            browser.cefBrowser,
+        )
+
+        browser.jbCefClient.addDownloadHandler(
+            object : CefDownloadHandlerAdapter() {
+                override fun onBeforeDownload(
+                    browser: CefBrowser,
+                    downloadItem: CefDownloadItem,
+                    suggestedName: String,
+                    callback: CefBeforeDownloadCallback,
+                ): Boolean = false
             },
             browser.cefBrowser,
         )
@@ -206,7 +256,8 @@ class ExcalidrawFileEditor(
               sceneChanged: function(payload) { ${sceneChangedQuery.inject("payload")} },
               save: function(payload) { ${saveQuery.inject("payload")} },
               themeChanged: function(payload) { ${themeChangedQuery.inject("payload")} },
-              browseLibrary: function(payload) { ${browseLibraryQuery.inject("payload")} }
+              browseLibrary: function(payload) { ${browseLibraryQuery.inject("payload")} },
+              openExternalLink: function(payload) { ${openExternalLinkQuery.inject("payload")} }
             };
             window.dispatchEvent(new CustomEvent("intellij-excalidraw-bridge-ready"));
         """.trimIndent()
@@ -223,24 +274,50 @@ class ExcalidrawFileEditor(
         )
     }
 
+    private fun queueFrontendScene(payload: String) {
+        if (disposed || !isTrustedFrontend()) return
+
+        pendingScenePayload = payload
+        sceneUpdateAlarm.cancelAllRequests()
+        sceneUpdateAlarm.addRequest(
+            { flushPendingFrontendScene(saveAfterUpdate = false) },
+            SCENE_UPDATE_DELAY_MS,
+        )
+    }
+
+    private fun flushPendingFrontendScene(saveAfterUpdate: Boolean) {
+        val application = ApplicationManager.getApplication()
+        if (!application.isDispatchThread) {
+            application.invokeAndWait { flushPendingFrontendScene(saveAfterUpdate) }
+            return
+        }
+
+        val payload = pendingScenePayload ?: return
+        pendingScenePayload = null
+        applyFrontendScene(payload, saveAfterUpdate)
+    }
+
     private fun applyFrontendScene(payload: String, saveAfterUpdate: Boolean) {
-        if (disposed || !isTrustedFrontend() || payload == document.text) {
+        if (payload == document.text) {
             if (saveAfterUpdate) saveDocument()
             return
         }
 
-        ApplicationManager.getApplication().invokeLater {
-            WriteCommandAction.runWriteCommandAction(project, Runnable {
-                lastPushedText = payload
-                document.setText(payload)
-            })
+        WriteCommandAction.runWriteCommandAction(project, Runnable {
+            lastPushedText = payload
+            document.setText(payload)
+        })
 
-            propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
+        propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
 
-            if (saveAfterUpdate) {
-                saveDocument()
-            }
+        if (saveAfterUpdate) {
+            saveDocument()
         }
+    }
+
+    private fun runOnEdt(action: () -> Unit) {
+        val application = ApplicationManager.getApplication()
+        if (application.isDispatchThread) action() else application.invokeLater(action)
     }
 
     private fun saveDocument() {
@@ -298,6 +375,17 @@ class ExcalidrawFileEditor(
     private fun isTrustedFrontend(): Boolean =
         ExcalidrawResourceSchemeHandlerFactory.isTrustedFrontendUrl(browser.cefBrowser.url)
 
+    private fun allowedExternalUri(url: String): URI? = try {
+        val uri = URI(url)
+        uri.takeIf {
+            (it.scheme.equals("https", ignoreCase = true) || it.scheme.equals("http", ignoreCase = true)) &&
+                !it.host.isNullOrBlank() &&
+                it.userInfo == null
+        }
+    } catch (_: IllegalArgumentException) {
+        null
+    }
+
     private fun String.toJavaScriptStringLiteral(): String = buildString(length + 16) {
         append('"')
         for (char in this@toJavaScriptStringLiteral) {
@@ -324,6 +412,10 @@ class ExcalidrawFileEditor(
 
     private object NoState : FileEditorState {
         override fun canBeMergedWith(otherState: FileEditorState, level: FileEditorStateLevel): Boolean = level == FULL
+    }
+
+    private companion object {
+        private const val SCENE_UPDATE_DELAY_MS = 250
     }
 
     private class LibraryBrowserDialog(
@@ -420,7 +512,7 @@ class ExcalidrawFileEditor(
                             suggestedName.ifBlank { downloadItem.suggestedFileName },
                         )
 
-                        if (!fileName.endsWith(".excalidrawlib")) {
+                        if (!fileName.endsWith(".excalidrawlib", ignoreCase = true)) {
                             blockedDownloadIds.add(downloadItem.id)
                             invokeInDialog {
                                 showBlockedMessage("Blocked a non-library download.")
@@ -681,11 +773,6 @@ class ExcalidrawFileEditor(
                             showSuccessMessage("Downloaded ${target.file.name}.")
                         }
                     } catch (error: Throwable) {
-                        try {
-                            Files.deleteIfExists(target.file.toPath())
-                        } catch (_: IOException) {
-                        }
-
                         thisLogger().warn("Failed to download Excalidraw library", error)
                         invokeInDialog {
                             showBlockedMessage("Could not download the library file.")
@@ -705,39 +792,94 @@ class ExcalidrawFileEditor(
         private fun downloadLibraryFile(url: String, target: Path) {
             val client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(20))
-                .followRedirects(HttpClient.Redirect.NORMAL)
+                .followRedirects(HttpClient.Redirect.NEVER)
                 .build()
-            val request = HttpRequest.newBuilder(URI(url))
-                .timeout(Duration.ofSeconds(60))
-                .GET()
-                .build()
-            val response = client.send(request, HttpResponse.BodyHandlers.ofInputStream())
+            val absoluteTarget = target.toAbsolutePath()
+            val temporaryFile = Files.createTempFile(
+                absoluteTarget.parent,
+                ".${absoluteTarget.fileName}.",
+                ".download",
+            )
 
-            if (response.statusCode() !in 200..299 ||
-                !ExcalidrawResourceSchemeHandlerFactory.isAllowedLibraryDownloadUrl(response.uri().toString())
-            ) {
-                response.body().close()
-                throw IOException("Unexpected library download response: ${response.statusCode()}")
-            }
+            try {
+                val response = sendLibraryRequest(client, URI(url))
+                response.body().use { input ->
+                    Files.newOutputStream(
+                        temporaryFile,
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.TRUNCATE_EXISTING,
+                    ).use { output ->
+                        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                        var total = 0L
 
-            response.body().use { input ->
-                Files.newOutputStream(target).use { output ->
-                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                    var total = 0L
+                        while (true) {
+                            val read = input.read(buffer)
+                            if (read < 0) break
 
-                    while (true) {
-                        val read = input.read(buffer)
-                        if (read < 0) break
+                            total += read
+                            if (total > MAX_LIBRARY_DOWNLOAD_BYTES) {
+                                throw IOException("Excalidraw library download is too large")
+                            }
 
-                        total += read
-                        if (total > MAX_LIBRARY_DOWNLOAD_BYTES) {
-                            throw IOException("Excalidraw library download is too large")
+                            output.write(buffer, 0, read)
                         }
-
-                        output.write(buffer, 0, read)
                     }
                 }
+
+                try {
+                    Files.move(
+                        temporaryFile,
+                        absoluteTarget,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING,
+                    )
+                } catch (_: java.nio.file.AtomicMoveNotSupportedException) {
+                    Files.move(temporaryFile, absoluteTarget, StandardCopyOption.REPLACE_EXISTING)
+                }
+            } finally {
+                Files.deleteIfExists(temporaryFile)
             }
+        }
+
+        private fun sendLibraryRequest(
+            client: HttpClient,
+            initialUri: URI,
+        ): HttpResponse<java.io.InputStream> {
+            var uri = initialUri
+
+            repeat(MAX_LIBRARY_REDIRECTS + 1) { redirectCount ->
+                if (!ExcalidrawResourceSchemeHandlerFactory.isAllowedLibraryDownloadUrl(uri.toString())) {
+                    throw IOException("Blocked untrusted library download URL")
+                }
+
+                val request = HttpRequest.newBuilder(uri)
+                    .timeout(Duration.ofSeconds(60))
+                    .GET()
+                    .build()
+                val response = client.send(request, HttpResponse.BodyHandlers.ofInputStream())
+
+                if (response.statusCode() in REDIRECT_STATUS_CODES) {
+                    response.body().close()
+                    if (redirectCount == MAX_LIBRARY_REDIRECTS) {
+                        throw IOException("Too many library download redirects")
+                    }
+
+                    val location = response.headers().firstValue("Location").orElseThrow {
+                        IOException("Library download redirect has no destination")
+                    }
+                    uri = uri.resolve(location)
+                    return@repeat
+                }
+
+                if (response.statusCode() !in 200..299) {
+                    response.body().close()
+                    throw IOException("Unexpected library download response: ${response.statusCode()}")
+                }
+
+                return response
+            }
+
+            throw IOException("Too many library download redirects")
         }
 
         private fun executeLibraryJavaScript(script: String) {
@@ -749,11 +891,17 @@ class ExcalidrawFileEditor(
         }
 
         private fun sanitizeDownloadFileName(fileName: String): String {
-            val sanitized = fileName
+            var sanitized = fileName
                 .ifBlank { "excalidraw-library.excalidrawlib" }
                 .replace(Regex("""[\\/:*?"<>|]"""), "_")
+                .trimEnd(' ', '.')
 
-            return if (sanitized.endsWith(".excalidrawlib")) sanitized else "$sanitized.excalidrawlib"
+            if (!sanitized.endsWith(".excalidrawlib", ignoreCase = true)) {
+                sanitized += ".excalidrawlib"
+            }
+
+            val baseName = sanitized.substringBefore('.').uppercase()
+            return if (baseName in WINDOWS_RESERVED_FILE_NAMES) "_$sanitized" else sanitized
         }
 
         private fun defaultDownloadDirectory(): Path {
@@ -797,6 +945,15 @@ class ExcalidrawFileEditor(
 
         private companion object {
             private const val MAX_LIBRARY_DOWNLOAD_BYTES = 25L * 1024L * 1024L
+            private const val MAX_LIBRARY_REDIRECTS = 5
+            private val REDIRECT_STATUS_CODES = setOf(301, 302, 303, 307, 308)
+            private val WINDOWS_RESERVED_FILE_NAMES = buildSet {
+                addAll(listOf("CON", "PRN", "AUX", "NUL"))
+                (1..9).forEach { number ->
+                    add("COM$number")
+                    add("LPT$number")
+                }
+            }
         }
     }
 }
