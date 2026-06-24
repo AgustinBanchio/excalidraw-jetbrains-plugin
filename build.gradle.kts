@@ -132,6 +132,17 @@ tasks {
         inputs.file(layout.projectDirectory.file("THIRD_PARTY_NOTICES.md"))
     }
 
+    register<Exec>("verifyBundledFrontendFonts") {
+        group = "verification"
+        description = "Checks that Excalidraw runtime font assets are bundled and allowed by CSP."
+        dependsOn("buildFrontend")
+        workingDir = frontendDir.asFile
+        commandLine(npmExecutable, "run", "fonts:check")
+        inputs.file(frontendDir.file("scripts/verify-bundled-fonts.mjs"))
+        inputs.file(frontendDir.file("index.html"))
+        inputs.dir(frontendDir.dir("dist"))
+    }
+
     val copyFrontendResources = register<Sync>("copyFrontendResources") {
         group = "frontend"
         description = "Synchronizes built frontend assets into generated plugin resources."
@@ -171,6 +182,6 @@ tasks {
     }
 
     check {
-        dependsOn("testFrontend", "checkThirdPartyNotices", "verifyFrontendResources")
+        dependsOn("testFrontend", "checkThirdPartyNotices", "verifyBundledFrontendFonts", "verifyFrontendResources")
     }
 }

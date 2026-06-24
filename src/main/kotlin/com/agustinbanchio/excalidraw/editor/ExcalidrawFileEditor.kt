@@ -32,6 +32,7 @@ import org.cef.browser.CefFrame
 import org.cef.callback.CefBeforeDownloadCallback
 import org.cef.callback.CefDownloadItem
 import org.cef.callback.CefDownloadItemCallback
+import org.cef.handler.CefDisplayHandlerAdapter
 import org.cef.handler.CefDownloadHandlerAdapter
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefLoadHandlerAdapter
@@ -124,6 +125,8 @@ class ExcalidrawFileEditor(
     }
 
     private fun setupJsBridge() {
+        setupDebugConsoleLogging()
+
         readyQuery.addHandler {
             if (!isTrustedFrontend()) return@addHandler null
 
@@ -229,6 +232,26 @@ class ExcalidrawFileEditor(
                     suggestedName: String,
                     callback: CefBeforeDownloadCallback,
                 ): Boolean = false
+            },
+            browser.cefBrowser,
+        )
+    }
+
+    private fun setupDebugConsoleLogging() {
+        if (!isDebugLoggingEnabled()) return
+
+        browser.jbCefClient.addDisplayHandler(
+            object : CefDisplayHandlerAdapter() {
+                override fun onConsoleMessage(
+                    browser: CefBrowser,
+                    level: org.cef.CefSettings.LogSeverity,
+                    message: String,
+                    source: String,
+                    line: Int,
+                ): Boolean {
+                    thisLogger().info("Excalidraw JCEF console [$level] $source:$line: $message")
+                    return false
+                }
             },
             browser.cefBrowser,
         )
@@ -465,6 +488,10 @@ class ExcalidrawFileEditor(
 
     private companion object {
         private const val SCENE_UPDATE_DELAY_MS = 250
+
+        private fun isDebugLoggingEnabled(): Boolean =
+            System.getProperty("excalidraw.plugin.debug")?.toBooleanStrictOrNull() == true ||
+                System.getenv("EXCALIDRAW_PLUGIN_DEBUG")?.toBooleanStrictOrNull() == true
     }
 
     private class LibraryBrowserDialog(

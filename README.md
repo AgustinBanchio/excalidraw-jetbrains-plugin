@@ -55,13 +55,13 @@ Marketplace.
 ## Current Stack
 
 - Kotlin `2.4.0` and JVM toolchain 21.
-- Gradle `9.5.1`.
+- Gradle `9.6.0`.
 - IntelliJ Platform Gradle Plugin `2.16.0`.
-- IntelliJ IDEA `2025.3` as the development platform.
+- IntelliJ IDEA `2026.1.3` as the development platform.
 - JCEF for the embedded web editor.
 - Excalidraw `0.18.1`.
 - React `19.2.7`.
-- Vite `8.0.16`.
+- Vite `8.1.0`.
 - TypeScript `6.0.3`.
 - MIT license.
 
@@ -87,6 +87,11 @@ vulnerabilities.
 
 The frontend is built during Gradle resource processing and bundled inside the
 plugin ZIP. Generated `frontend/dist` files are not committed.
+
+The bundled frontend also includes the font assets shipped with
+`@excalidraw/excalidraw`. Excalidraw loads some drawing fonts at runtime for
+font subsetting, so the plugin serves those files from its own JCEF origin
+instead of allowing external font fetches.
 
 ## Requirements
 
@@ -178,6 +183,29 @@ npm run build
 the locked production dependency graph. Gradle's `check` task verifies that
 the notice remains current.
 
+`npm run fonts:check` verifies that every runtime Excalidraw font referenced by
+the built JavaScript exists in `frontend/dist/fonts` and that the CSP allows the
+same-origin font fetches Excalidraw performs internally.
+
+## Debugging JCEF Console Output
+
+The plugin can forward JCEF console messages from the embedded editor to the IDE
+log for debugging Marketplace or installed-plugin issues. Enable it with either
+of these before launching the IDE:
+
+```bash
+export EXCALIDRAW_PLUGIN_DEBUG=true
+```
+
+or add this VM option:
+
+```text
+-Dexcalidraw.plugin.debug=true
+```
+
+Console messages are written to the IDE log with the `Excalidraw JCEF console`
+prefix. Leave this disabled for normal use.
+
 ## Build and Install Locally
 
 Build the installable plugin ZIP:
@@ -244,19 +272,19 @@ To verify against a newer JetBrains Platform release without changing
 `gradle.properties`, override `platformVersion`:
 
 ```bash
-./gradlew verifyPlugin -PplatformVersion=2026.1
+./gradlew verifyPlugin -PplatformVersion=2026.1.3
 ```
 
 On Windows PowerShell, quote the property argument:
 
 ```powershell
-.\gradlew.bat verifyPlugin '-PplatformVersion=2026.1'
+.\gradlew.bat verifyPlugin '-PplatformVersion=2026.1.3'
 ```
 
 The development target can also be changed from IntelliJ IDEA to GoLand:
 
 ```powershell
-.\gradlew.bat verifyPlugin '-PplatformProduct=goland' '-PplatformVersion=2026.1'
+.\gradlew.bat verifyPlugin '-PplatformProduct=goland' '-PplatformVersion=2026.1.3'
 ```
 
 For a signed release, also run `./gradlew verifyPluginSignature`.
