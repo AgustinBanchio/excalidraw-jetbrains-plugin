@@ -42,13 +42,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.2.6 - 2026-06-19</h3>
+        <h3>0.2.7 - 2026-06-24</h3>
         <ul>
-            <li>Prevented invalid drawings and stale queued scene updates from overwriting current file contents.</li>
-            <li>Hardened external navigation, embedded content handling, library downloads, and invalid-scene behavior.</li>
-            <li>Corrected synchronous JCEF resource handling for newer JetBrains Platform versions.</li>
-            <li>Removed obsolete frontend assets during packaging and added complete generated third-party notices.</li>
-            <li>Added frontend and Kotlin tests plus automated IntelliJ IDEA and GoLand compatibility verification.</li>
+            <li>Fixed bundled Excalidraw font loading so the editor no longer falls back to blocked external font URLs under the plugin CSP.</li>
+            <li>Added verification for bundled Excalidraw runtime fonts and optional JCEF console logging for troubleshooting frontend issues.</li>
+            <li>Updated frontend and build dependencies, including Vite, React plugin overrides, Radix overrides, nanoid override, Gradle, and the default JetBrains development platform.</li>
         </ul>
     ]]></change-notes>
 
