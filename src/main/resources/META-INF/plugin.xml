@@ -42,11 +42,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.2.7 - 2026-06-24</h3>
+        <h3>0.2.8 - 2026-07-07</h3>
         <ul>
-            <li>Fixed bundled Excalidraw font loading so the editor no longer falls back to blocked external font URLs under the plugin CSP.</li>
-            <li>Added verification for bundled Excalidraw runtime fonts and optional JCEF console logging for troubleshooting frontend issues.</li>
-            <li>Updated frontend and build dependencies, including Vite, React plugin overrides, Radix overrides, nanoid override, Gradle, and the default JetBrains development platform.</li>
+            <li>Fixed pasted images reopening as broken placeholders by restoring embedded file data into Excalidraw and only marking image elements as saved when their data URL is present.</li>
+            <li>Flushes pending drawing changes when the editor closes so recently pasted images are written before the tab is disposed.</li>
+            <li>Updated frontend and build dependencies, including Vite, Vitest, the IntelliJ Platform Gradle plugin, and the default JetBrains development platform.</li>
         </ul>
     ]]></change-notes>
 
