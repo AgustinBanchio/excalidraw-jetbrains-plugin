@@ -2,14 +2,23 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Excalidraw, serializeAsJSON, useHandleLibrary } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
-import { EditorDocumentState, encodeSceneUpdate } from "./documentState";
-import { EMPTY_SCENE, getTheme, parseScene, sanitizeAppState, type Scene, type Theme } from "./scene";
+import { EditorDocumentState, type SceneUpdate } from "./documentState";
+import {
+  EMPTY_SCENE,
+  getTheme,
+  normalizePersistedImageStatuses,
+  parseScene,
+  sanitizeAppState,
+  type Scene,
+  type Theme
+} from "./scene";
 import "./styles.css";
 
 type Bridge = {
   ready: (payload: string) => void;
-  sceneChanged: (payload: string) => void;
-  save: (payload: string) => void;
+  beginSceneTransfer: (payload: string) => void;
+  appendSceneTransferChunk: (payload: string) => void;
+  completeSceneTransfer: (payload: string) => void;
   saveCurrentDocument: () => void;
   themeChanged: (payload: Theme) => void;
   browseLibrary: (url: string) => void;
@@ -26,14 +35,34 @@ declare global {
 }
 
 const HELP_ATTRIBUTION_TEXT = "JetBrains Excalidraw Editor by Agustin Banchio";
+const MAX_SCENE_TRANSFER_CHUNK_SIZE = 16_000;
 
 function serializeScene(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>): string {
   return serializeAsJSON(
-    elements as any,
+    normalizePersistedImageStatuses(elements, files) as any,
     sanitizeAppState((appState ?? {}) as Record<string, unknown>) as any,
     files as any,
     "local"
   );
+}
+
+function transmitSceneUpdate(bridge: Bridge | undefined, update: SceneUpdate, saveImmediately: boolean) {
+  if (!bridge) {
+    return;
+  }
+
+  const transferId = `${update.revision}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+  const chunkCount = Math.max(1, Math.ceil(update.scene.length / MAX_SCENE_TRANSFER_CHUNK_SIZE));
+
+  bridge.beginSceneTransfer(`${transferId}\n${update.revision}\n${saveImmediately ? "1" : "0"}\n${chunkCount}`);
+
+  for (let index = 0; index < chunkCount; index += 1) {
+    const start = index * MAX_SCENE_TRANSFER_CHUNK_SIZE;
+    const chunk = update.scene.slice(start, start + MAX_SCENE_TRANSFER_CHUNK_SIZE);
+    bridge.appendSceneTransferChunk(`${transferId}\n${chunk}`);
+  }
+
+  bridge.completeSceneTransfer(transferId);
 }
 
 function notifyWhenBridgeIsReady() {
@@ -178,7 +207,11 @@ function App() {
 
           setInitialData(nextData);
           setLoadError(null);
-          api.current?.updateScene(nextData);
+          api.current?.updateScene({
+            elements: nextData.elements,
+            appState: nextData.appState
+          });
+          api.current?.addFiles?.(Object.values(nextData.files ?? {}));
           documentState.current.completeLoad(contents);
           lastTheme.current = getTheme(scene.appState);
 
@@ -214,7 +247,7 @@ function App() {
         event.preventDefault();
         const update = documentState.current.currentUpdate();
         if (update) {
-          window.intellijExcalidraw?.save(encodeSceneUpdate(update));
+          transmitSceneUpdate(window.intellijExcalidraw, update, true);
         } else {
           window.intellijExcalidraw?.saveCurrentDocument();
         }
@@ -276,7 +309,7 @@ function App() {
             documentState.current.updateScene(serialized);
             const update = documentState.current.currentUpdate();
             if (update) {
-              window.intellijExcalidraw?.sceneChanged(encodeSceneUpdate(update));
+              transmitSceneUpdate(window.intellijExcalidraw, update, false);
             }
           }}
         />

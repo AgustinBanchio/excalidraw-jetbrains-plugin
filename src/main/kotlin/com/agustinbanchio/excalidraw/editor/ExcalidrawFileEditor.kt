@@ -67,8 +67,9 @@ class ExcalidrawFileEditor(
     private val browser = JBCefBrowser()
     private val propertyChangeSupport = PropertyChangeSupport(this)
     private val readyQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
-    private val sceneChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
-    private val saveQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val beginSceneTransferQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val appendSceneTransferChunkQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val completeSceneTransferQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val saveCurrentDocumentQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val themeChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val browseLibraryQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
@@ -79,6 +80,7 @@ class ExcalidrawFileEditor(
     private var applyingFrontendScene = false
     @Volatile
     private var pendingSceneUpdate: PendingSceneUpdate? = null
+    private var incomingSceneTransfer: IncomingSceneTransfer? = null
 
     init {
         setupJsBridge()
@@ -112,11 +114,12 @@ class ExcalidrawFileEditor(
 
     override fun dispose() {
         sceneUpdateAlarm.cancelAllRequests()
-        flushPendingFrontendScene(saveAfterUpdate = false)
+        flushPendingFrontendScene(saveAfterUpdate = true)
         disposed = true
         Disposer.dispose(readyQuery)
-        Disposer.dispose(sceneChangedQuery)
-        Disposer.dispose(saveQuery)
+        Disposer.dispose(beginSceneTransferQuery)
+        Disposer.dispose(appendSceneTransferChunkQuery)
+        Disposer.dispose(completeSceneTransferQuery)
         Disposer.dispose(saveCurrentDocumentQuery)
         Disposer.dispose(themeChangedQuery)
         Disposer.dispose(browseLibraryQuery)
@@ -136,17 +139,24 @@ class ExcalidrawFileEditor(
             null
         }
 
-        sceneChangedQuery.addHandler { payload ->
+        beginSceneTransferQuery.addHandler { payload ->
             if (!isTrustedFrontend()) return@addHandler null
 
-            runOnEdt { queueFrontendScene(payload, saveImmediately = false) }
+            runOnEdt { beginSceneTransfer(payload) }
             null
         }
 
-        saveQuery.addHandler { payload ->
+        appendSceneTransferChunkQuery.addHandler { payload ->
             if (!isTrustedFrontend()) return@addHandler null
 
-            runOnEdt { queueFrontendScene(payload, saveImmediately = true) }
+            runOnEdt { appendSceneTransferChunk(payload) }
+            null
+        }
+
+        completeSceneTransferQuery.addHandler { payload ->
+            if (!isTrustedFrontend()) return@addHandler null
+
+            runOnEdt { completeSceneTransfer(payload) }
             null
         }
 
@@ -288,8 +298,9 @@ class ExcalidrawFileEditor(
         val script = """
             window.intellijExcalidraw = {
               ready: function(payload) { ${readyQuery.inject("payload")} },
-              sceneChanged: function(payload) { ${sceneChangedQuery.inject("payload")} },
-              save: function(payload) { ${saveQuery.inject("payload")} },
+              beginSceneTransfer: function(payload) { ${beginSceneTransferQuery.inject("payload")} },
+              appendSceneTransferChunk: function(payload) { ${appendSceneTransferChunkQuery.inject("payload")} },
+              completeSceneTransfer: function(payload) { ${completeSceneTransferQuery.inject("payload")} },
               saveCurrentDocument: function() { ${saveCurrentDocumentQuery.inject("''")} },
               themeChanged: function(payload) { ${themeChangedQuery.inject("payload")} },
               browseLibrary: function(payload) { ${browseLibraryQuery.inject("payload")} },
@@ -310,9 +321,12 @@ class ExcalidrawFileEditor(
     }
 
     private fun queueFrontendScene(encodedUpdate: String, saveImmediately: Boolean) {
-        if (disposed || !isTrustedFrontend()) return
-
         val update = PendingSceneUpdate.decode(encodedUpdate) ?: return
+        queueFrontendScene(update, saveImmediately)
+    }
+
+    private fun queueFrontendScene(update: PendingSceneUpdate, saveImmediately: Boolean) {
+        if (disposed || !isTrustedFrontend()) return
         if (update.revision != documentRevision) {
             if (saveImmediately) saveDocument()
             return
@@ -350,6 +364,44 @@ class ExcalidrawFileEditor(
         pendingSceneUpdate = null
     }
 
+    private fun beginSceneTransfer(payload: String) {
+        val transfer = IncomingSceneTransfer.decode(payload) ?: return
+        incomingSceneTransfer = transfer
+    }
+
+    private fun appendSceneTransferChunk(payload: String) {
+        val separator = payload.indexOf('\n')
+        if (separator <= 0) {
+            incomingSceneTransfer = null
+            return
+        }
+
+        val transferId = payload.substring(0, separator)
+        val chunk = payload.substring(separator + 1)
+        val transfer = incomingSceneTransfer
+
+        if (transfer == null || transfer.id != transferId) {
+            incomingSceneTransfer = null
+            return
+        }
+
+        transfer.appendChunk(chunk)
+    }
+
+    private fun completeSceneTransfer(payload: String) {
+        val transfer = incomingSceneTransfer
+        incomingSceneTransfer = null
+
+        if (transfer == null || transfer.id != payload || !transfer.isComplete()) {
+            return
+        }
+
+        queueFrontendScene(
+            PendingSceneUpdate(transfer.revision, transfer.scene()),
+            transfer.saveImmediately,
+        )
+    }
+
     private fun applyFrontendScene(payload: String, saveAfterUpdate: Boolean) {
         if (payload == document.text) {
             if (saveAfterUpdate) saveDocument()
@@ -378,10 +430,12 @@ class ExcalidrawFileEditor(
     }
 
     private fun saveDocument() {
-        ApplicationManager.getApplication().invokeLater {
+        val save = {
             FileDocumentManager.getInstance().saveDocument(document)
             propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
         }
+        val application = ApplicationManager.getApplication()
+        if (application.isDispatchThread) save() else application.invokeAndWait(save)
     }
 
     private fun openLibraryBrowser(url: String) {
@@ -478,6 +532,41 @@ class ExcalidrawFileEditor(
 
                 val revision = value.substring(0, separator).toLongOrNull() ?: return null
                 return PendingSceneUpdate(revision, value.substring(separator + 1))
+            }
+        }
+    }
+
+    private data class IncomingSceneTransfer(
+        val id: String,
+        val revision: Long,
+        val saveImmediately: Boolean,
+        val expectedChunkCount: Int,
+        private val builder: StringBuilder = StringBuilder(),
+        private var receivedChunkCount: Int = 0,
+    ) {
+        fun appendChunk(chunk: String) {
+            builder.append(chunk)
+            receivedChunkCount += 1
+        }
+
+        fun isComplete(): Boolean = receivedChunkCount == expectedChunkCount
+
+        fun scene(): String = builder.toString()
+
+        companion object {
+            fun decode(value: String): IncomingSceneTransfer? {
+                val lines = value.split('\n')
+                if (lines.size != 4) return null
+
+                val revision = lines[1].toLongOrNull() ?: return null
+                val saveImmediately = when (lines[2]) {
+                    "1" -> true
+                    "0" -> false
+                    else -> return null
+                }
+                val chunkCount = lines[3].toIntOrNull()?.takeIf { it > 0 } ?: return null
+
+                return IncomingSceneTransfer(lines[0], revision, saveImmediately, chunkCount)
             }
         }
     }

@@ -1,3 +1,5 @@
+import { restore } from "@excalidraw/excalidraw";
+
 export type Theme = "light" | "dark";
 
 export type Scene = {
@@ -44,15 +46,27 @@ export function parseScene(contents: string, preferredTheme: Theme): Scene {
   }
 
   const appState = sanitizeAppState(parsed.appState ?? {});
+  const restored = restore(
+    {
+      elements: parsed.elements,
+      appState,
+      files: parsed.files as any
+    },
+    { theme: preferredTheme },
+    null
+  );
+
+  const files = restored.files as Record<string, unknown>;
+
   return {
     ...EMPTY_SCENE,
     ...parsed,
-    elements: parsed.elements,
+    elements: normalizePersistedImageStatuses(restored.elements, files),
     appState: {
       theme: preferredTheme,
-      ...appState
+      ...sanitizeAppState(restored.appState as Record<string, unknown>)
     },
-    files: parsed.files ?? {}
+    files
   };
 }
 
@@ -75,4 +89,31 @@ export function sanitizeAppState(appState: Record<string, unknown>): Record<stri
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+export function normalizePersistedImageStatuses(
+  elements: readonly unknown[] | undefined,
+  files: Record<string, unknown> | undefined
+): readonly unknown[] {
+  if (!elements?.length || !files) {
+    return elements ?? [];
+  }
+
+  return elements.map((element) => {
+    if (!isRecord(element) || element.type !== "image" || typeof element.fileId !== "string") {
+      return element;
+    }
+    if (!hasPersistedFileData(files[element.fileId]) || element.status === "saved") {
+      return element;
+    }
+
+    return {
+      ...element,
+      status: "saved"
+    };
+  });
+}
+
+function hasPersistedFileData(file: unknown): boolean {
+  return isRecord(file) && typeof file.dataURL === "string" && file.dataURL.length > 0;
 }
