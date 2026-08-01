@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin require-restart="true">
     <id>com.agustinbanchio.excalidraw</id>
     <name>Excalidraw Editor</name>
     <vendor>Agustin Banchio</vendor>
@@ -42,11 +42,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.2.8 - 2026-07-07</h3>
+        <h3>0.2.9 - 2026-08-01</h3>
         <ul>
-            <li>Fixed pasted images reopening as broken placeholders by restoring embedded file data into Excalidraw and only marking image elements as saved when their data URL is present.</li>
-            <li>Flushes pending drawing changes when the editor closes so recently pasted images are written before the tab is disposed.</li>
-            <li>Updated frontend and build dependencies, including Vite, Vitest, the IntelliJ Platform Gradle plugin, and the default JetBrains development platform.</li>
+            <li>Added compatibility with JetBrains IDE 2026.2, including support for its standalone JCEF module.</li>
+            <li>Updated frontend and build dependencies, including React, TypeScript, Vite, Vitest, Kotlin, Gradle, and the IntelliJ Platform Gradle plugin.</li>
         </ul>
     ]]></change-notes>
 

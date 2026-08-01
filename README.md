@@ -222,7 +222,7 @@ To install it in a regular JetBrains IDE:
 1. Open **Settings | Plugins**.
 2. Open the gear menu and choose **Install Plugin from Disk...**.
 3. Select the generated ZIP.
-4. Restart the IDE when prompted.
+4. Restart the IDE to activate the plugin.
 
 ## Sign the Plugin
 
