@@ -6,6 +6,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.compile.JavaCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 abstract class VerifySyncedDirectories : DefaultTask() {
     @get:InputDirectory
@@ -56,14 +58,23 @@ dependencies {
         when (platformProduct.get()) {
             "goland" -> goland(platformVersion)
             "idea" -> intellijIdea(platformVersion)
+            "pycharm" -> pycharm(platformVersion)
+            "webstorm" -> webstorm(platformVersion)
             else -> error("Unsupported platformProduct: ${platformProduct.get()}")
+        }
+        // JCEF becomes a separately bundled plugin in 2026.2.
+        if (platformVersion.get().startsWith("2026.2")) {
+            bundledPlugin("intellij.platform.ui.jcef")
         }
         pluginVerifier()
     }
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+    }
 }
 
 intellijPlatform {
@@ -81,6 +92,10 @@ intellijPlatform {
 }
 
 tasks {
+    withType<JavaCompile>().configureEach {
+        options.release = 21
+    }
+
     test {
         useJUnitPlatform()
     }
