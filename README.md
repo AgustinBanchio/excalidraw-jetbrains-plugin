@@ -38,10 +38,10 @@ Only one installed plugin should register the `.excalidraw` file type. Disable
 or uninstall other Excalidraw editor plugins before enabling this plugin to
 avoid file-type and editor conflicts.
 
-The current `0.2.8` release requires JetBrains Platform build `253`,
-corresponding to JetBrains IDEs version `2025.3`, or newer. No upper build limit
-is declared. Compatibility with newer IDE releases should be checked with
-Plugin Verifier before publishing each release.
+The plugin requires JetBrains Platform build `253.29346`, corresponding to
+JetBrains IDEs version `2025.3.1`, or newer. No upper build limit is declared.
+Compatibility with newer IDE releases should be checked with Plugin Verifier
+before publishing each release.
 
 The embedded editor requires a JetBrains Runtime with JCEF, which is included
 with normal JetBrains IDE installations.
@@ -54,15 +54,15 @@ Marketplace.
 
 ## Current Stack
 
-- Kotlin `2.4.0` and JVM toolchain 21.
-- Gradle `9.6.0`.
-- IntelliJ Platform Gradle Plugin `2.16.0`.
-- IntelliJ IDEA `2026.1.3` as the development platform.
+- Kotlin `2.4.10`, compiled with JDK 25 to Java 21 bytecode.
+- Gradle `9.6.1`.
+- IntelliJ Platform Gradle Plugin `2.18.1`.
+- IntelliJ IDEA `2026.1.4` as the default development platform.
 - JCEF for the embedded web editor.
 - Excalidraw `0.18.1`.
-- React `19.2.7`.
-- Vite `8.1.0`.
-- TypeScript `6.0.3`.
+- React `19.2.8`.
+- Vite `8.2.0` and Vitest `4.1.10`.
+- TypeScript `7.0.2`.
 - MIT license.
 
 Frontend dependencies are pinned in `frontend/package.json` and
@@ -95,7 +95,7 @@ instead of allowing external font fetches.
 
 ## Requirements
 
-- JDK or JetBrains Runtime 21.
+- JDK or JetBrains Runtime 25.
 - Node.js `20.19+`, `22.12+`, or a newer supported Node.js release.
 - npm.
 - The Gradle wrapper included in this repository.
@@ -105,14 +105,14 @@ If Java is not on `PATH`, set `JAVA_HOME` before running Gradle.
 Windows PowerShell:
 
 ```powershell
-$env:JAVA_HOME='<path-to-jbr-21>'
+$env:JAVA_HOME='<path-to-jbr-25>'
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
 ```
 
 macOS or Linux:
 
 ```bash
-export JAVA_HOME="<path-to-jbr-21>"
+export JAVA_HOME="<path-to-jbr-25>"
 export PATH="$JAVA_HOME/bin:$PATH"
 ```
 
@@ -272,19 +272,19 @@ To verify against a newer JetBrains Platform release without changing
 `gradle.properties`, override `platformVersion`:
 
 ```bash
-./gradlew verifyPlugin -PplatformVersion=2026.1.3
+./gradlew verifyPlugin -PplatformVersion=2026.2
 ```
 
 On Windows PowerShell, quote the property argument:
 
 ```powershell
-.\gradlew.bat verifyPlugin '-PplatformVersion=2026.1.3'
+.\gradlew.bat verifyPlugin '-PplatformVersion=2026.2'
 ```
 
 The development target can also be changed from IntelliJ IDEA to GoLand:
 
 ```powershell
-.\gradlew.bat verifyPlugin '-PplatformProduct=goland' '-PplatformVersion=2026.1.3'
+.\gradlew.bat verifyPlugin '-PplatformProduct=goland' '-PplatformVersion=2026.1.4'
 ```
 
 For a signed release, also run `./gradlew verifyPluginSignature`.
