@@ -51,6 +51,8 @@
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
+    <!-- Force the classloader to include JCEF classes -->
+    <depends>com.intellij.modules.jcef</depends>
     <depends>com.intellij.modules.lang</depends>
     <extensions defaultExtensionNs="com.intellij">
         <internalFileTemplate name="Excalidraw Drawing"/>
