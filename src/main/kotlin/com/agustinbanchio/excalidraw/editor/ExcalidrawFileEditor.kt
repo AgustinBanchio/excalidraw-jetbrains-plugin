@@ -24,6 +24,8 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.JBColor
+import com.intellij.ui.components.Magnificator
+import com.intellij.ui.components.ZoomableViewport
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
@@ -40,7 +42,12 @@ import org.cef.handler.CefLoadHandlerAdapter
 import org.cef.handler.CefRequestHandlerAdapter
 import org.cef.network.CefRequest
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.Dimension
+import java.awt.DisplayMode
+import java.awt.Point
+import java.awt.event.HierarchyEvent
+import java.awt.event.HierarchyListener
 import java.awt.event.MouseWheelEvent
 import java.awt.event.MouseWheelListener
 import java.beans.PropertyChangeListener
@@ -60,15 +67,35 @@ import java.time.Duration
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
-import kotlin.math.roundToInt
+import javax.swing.Timer
+import kotlin.math.ceil
 
 class ExcalidrawFileEditor(
     private val project: Project,
     private val virtualFile: VirtualFile,
 ) : UserDataHolderBase(), FileEditor {
+    private val pluginSettings = ExcalidrawThemeSettings.getInstance()
+    private val adaptiveOsrFrameRateEnabled = pluginSettings.adaptiveOsrFrameRateEnabled
+    private val nativeTrackpadZoomEnabled = pluginSettings.nativeTrackpadZoomEnabled
+    private val coalescedTrackpadScrollingEnabled = pluginSettings.coalescedTrackpadScrollingEnabled
     private val document: Document = FileDocumentManager.getInstance().getDocument(virtualFile)
         ?: error("Unable to open document for ${virtualFile.path}")
-    private val browser = JBCefBrowser()
+    private val browser = JBCefBrowser.createBuilder()
+        .setOffScreenRendering(false)
+        .build()
+    private val nativeMagnificationViewport = if (
+        browser.isOffScreenRendering && SystemInfo.isMac && nativeTrackpadZoomEnabled
+    ) {
+        ExcalidrawZoomableViewport(
+            browser.component,
+            onMagnificationStarted = ::beginNativeMagnification,
+            onMagnified = ::applyNativeMagnification,
+            onMagnificationFinished = ::endNativeMagnification,
+        )
+    } else {
+        null
+    }
+    private val editorComponent: JComponent = nativeMagnificationViewport ?: browser.component
     private val propertyChangeSupport = PropertyChangeSupport(this)
     private val readyQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val beginSceneTransferQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
@@ -78,6 +105,7 @@ class ExcalidrawFileEditor(
     private val themeChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val browseLibraryQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val openExternalLinkQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val scrollAppliedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val sceneUpdateAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private var disposed = false
     private var documentRevision = 1L
@@ -86,15 +114,30 @@ class ExcalidrawFileEditor(
     private var pendingSceneUpdate: PendingSceneUpdate? = null
     private var incomingSceneTransfer: IncomingSceneTransfer? = null
     private var trackpadWheelListener: MouseWheelListener? = null
+    private var trackpadScrollTimer: Timer? = null
+    private val trackpadScrollAccumulator = TrackpadScrollAccumulator()
+    private val highResolutionWheelDetector = HighResolutionWheelStreamDetector(TRACKPAD_STREAM_CONTINUATION_MS)
+    private var pendingTrackpadWheelEvent: MouseWheelEvent? = null
+    private var lastTrackpadScrollEventAt: Long? = null
+    private var touchScrollDiagnosticCount = 0L
+    private var standardWheelDiagnosticCount = 0L
+    private var adaptedStandardWheelDiagnosticCount = 0L
+    private var scrollDispatchDiagnosticCount = 0L
+    private var scrollAcknowledgementDiagnosticCount = 0L
+    private var lastWheelDiagnosticsAt = System.nanoTime()
+    private var osrGraphicsConfigurationListener: PropertyChangeListener? = null
+    private var osrHierarchyListener: HierarchyListener? = null
+    private var activeDisplayRefreshRate: Int? = null
 
     init {
+        setupOffScreenRendering()
         setupTrackpadGestures()
         setupJsBridge()
         setupDocumentListener()
         loadFrontend()
     }
 
-    override fun getComponent(): JComponent = browser.component
+    override fun getComponent(): JComponent = editorComponent
 
     override fun getPreferredFocusedComponent(): JComponent = browser.component
 
@@ -130,46 +173,234 @@ class ExcalidrawFileEditor(
         Disposer.dispose(themeChangedQuery)
         Disposer.dispose(browseLibraryQuery)
         Disposer.dispose(openExternalLinkQuery)
+        Disposer.dispose(scrollAppliedQuery)
         trackpadWheelListener?.let { browser.browserComponent?.removeMouseWheelListener(it) }
+        cancelPendingTrackpadScroll()
+        val browserComponent = browser.browserComponent
+        osrGraphicsConfigurationListener?.let { browserComponent?.removePropertyChangeListener("graphicsConfiguration", it) }
+        osrHierarchyListener?.let { browserComponent?.removeHierarchyListener(it) }
         Disposer.dispose(browser)
     }
 
+    private fun setupOffScreenRendering() {
+        if (!browser.isOffScreenRendering || (!adaptiveOsrFrameRateEnabled && !coalescedTrackpadScrollingEnabled)) return
+
+        val browserComponent = browser.browserComponent ?: return
+        osrGraphicsConfigurationListener = PropertyChangeListener {
+            updateOsrDisplayRefreshRate(browserComponent)
+        }.also {
+            browserComponent.addPropertyChangeListener("graphicsConfiguration", it)
+        }
+        osrHierarchyListener = HierarchyListener { event ->
+            val displayChanged = event.changeFlags and
+                (HierarchyEvent.DISPLAYABILITY_CHANGED.toLong() or HierarchyEvent.SHOWING_CHANGED.toLong()) != 0L
+            if (displayChanged) {
+                updateOsrDisplayRefreshRate(browserComponent)
+            }
+        }.also(browserComponent::addHierarchyListener)
+
+        ApplicationManager.getApplication().invokeLater {
+            if (!disposed) updateOsrDisplayRefreshRate(browserComponent)
+        }
+    }
+
+    private fun updateOsrDisplayRefreshRate(browserComponent: Component) {
+        val refreshRate = browserComponent.graphicsConfiguration
+            ?.device
+            ?.displayMode
+            ?.refreshRate
+            ?.takeIf { it != DisplayMode.REFRESH_RATE_UNKNOWN && it > 0 }
+            ?: return
+        if (refreshRate == activeDisplayRefreshRate) return
+
+        activeDisplayRefreshRate = refreshRate
+        updateTrackpadScrollTimerDelay()
+        if (!adaptiveOsrFrameRateEnabled) return
+
+        try {
+            browser.cefBrowser.setWindowlessFrameRate(refreshRate)
+            thisLogger().debug("Set Excalidraw JCEF OSR frame rate to the active display rate: $refreshRate Hz")
+        } catch (error: Throwable) {
+            thisLogger().warn("Failed to update Excalidraw JCEF OSR frame rate", error)
+        }
+    }
+
     private fun setupTrackpadGestures() {
-        if (!browser.isOffScreenRendering) return
+        if (!browser.isOffScreenRendering || (!nativeTrackpadZoomEnabled && !coalescedTrackpadScrollingEnabled)) return
 
         val browserComponent = browser.browserComponent ?: return
         trackpadWheelListener = MouseWheelListener { event ->
-            // OSR converts precision trackpad scrolling into a single synthetic touch point.
-            // Excalidraw expects trackpad pan/pinch as wheel events, while genuine mouse wheels
-            // use the two standard AWT scroll types and must remain on JCEF's default path.
-            if (event.scrollType <= MouseWheelEvent.WHEEL_BLOCK_SCROLL) return@MouseWheelListener
+            recordWheelEventForDiagnostics(event)
 
-            event.consume()
-            var delta = event.preciseWheelRotation * event.scrollAmount * OSR_WHEEL_ROTATION_FACTOR
-            if (SystemInfo.isLinux || SystemInfo.isMac) {
-                delta *= -1
+            if (
+                lastTrackpadScrollEventAt?.let { event.`when` - it > TRACKPAD_STREAM_RESET_GAP_MS } == true
+            ) {
+                cancelPendingTrackpadScroll()
             }
 
-            browser.cefBrowser.sendMouseWheelEvent(
-                MouseWheelEvent(
-                    event.component,
-                    MouseWheelEvent.MOUSE_WHEEL,
+            // JBR uses the otherwise undefined scroll types 2..4 for some touch-scroll
+            // streams. macOS can instead report trackpads as fractional standard wheel
+            // events, so identify those without intercepting ordinary integer mouse wheels.
+            val isTouchScroll = event.scrollType in TOUCH_SCROLL_BEGIN..TOUCH_SCROLL_END
+            val isHighResolutionStandardScroll = event.scrollType <= MouseWheelEvent.WHEEL_BLOCK_SCROLL &&
+                SystemInfo.isMac &&
+                highResolutionWheelDetector.isHighResolutionStream(
                     event.`when`,
-                    event.modifiersEx,
-                    event.x,
-                    event.y,
-                    event.xOnScreen,
-                    event.yOnScreen,
-                    event.clickCount,
-                    event.isPopupTrigger,
-                    MouseWheelEvent.WHEEL_UNIT_SCROLL,
-                    1,
-                    delta.roundToInt(),
-                    delta,
-                ),
-            )
+                    event.preciseWheelRotation,
+                    event.wheelRotation,
+                )
+            if (!isTouchScroll && !isHighResolutionStandardScroll) return@MouseWheelListener
+
+            if (nativeMagnificationViewport?.isMagnificationActive == true) {
+                event.consume()
+                cancelPendingTrackpadScroll()
+                return@MouseWheelListener
+            }
+
+            if (!coalescedTrackpadScrollingEnabled) return@MouseWheelListener
+
+            event.consume()
+            if (event.scrollType == TOUCH_SCROLL_BEGIN) {
+                cancelPendingTrackpadScroll()
+            }
+            lastTrackpadScrollEventAt = event.`when`
+            if (isHighResolutionStandardScroll) adaptedStandardWheelDiagnosticCount++
+
+            val scrollAmount = if (isTouchScroll) event.scrollAmount.coerceAtLeast(1) else 1
+            var delta = event.preciseWheelRotation * scrollAmount * OSR_TRACKPAD_WHEEL_FACTOR
+            // Standard macOS wheel events already reflect the system's natural-scrolling
+            // preference. Only JBR's synthetic touch-scroll events use the opposite sign.
+            if (isTouchScroll && (SystemInfo.isLinux || SystemInfo.isMac)) {
+                delta *= -1
+            }
+            if (!delta.isFinite() || delta == 0.0) return@MouseWheelListener
+
+            pendingTrackpadWheelEvent = event
+            if (event.isShiftDown) {
+                trackpadScrollAccumulator.add(delta, 0.0)
+            } else {
+                trackpadScrollAccumulator.add(0.0, delta)
+            }
+            scheduleTrackpadScrollFlush()
         }
         browserComponent.addMouseWheelListener(trackpadWheelListener)
+    }
+
+    private fun scheduleTrackpadScrollFlush() {
+        if (trackpadScrollAccumulator.inFlightSequence != null) return
+
+        if (activeDisplayRefreshRate == null) {
+            browser.browserComponent?.let(::updateOsrDisplayRefreshRate)
+        }
+
+        val timer = trackpadScrollTimer ?: Timer(trackpadScrollFrameDelayMs()) {
+            flushPendingTrackpadScroll()
+        }.also {
+            it.isRepeats = false
+            it.isCoalesce = true
+            trackpadScrollTimer = it
+        }
+        if (!timer.isRunning) {
+            val delay = trackpadScrollFrameDelayMs()
+            timer.delay = delay
+            timer.initialDelay = delay
+            timer.start()
+        }
+    }
+
+    private fun flushPendingTrackpadScroll() {
+        val dispatch = trackpadScrollAccumulator.dispatchIfIdle() ?: return
+        scrollDispatchDiagnosticCount++
+
+        sendTrackpadScrollToFrontend(dispatch)
+    }
+
+    private fun acknowledgeTrackpadScroll(sequence: Long) {
+        if (!trackpadScrollAccumulator.acknowledge(sequence)) return
+
+        scrollAcknowledgementDiagnosticCount++
+        if (trackpadScrollAccumulator.hasPending) {
+            scheduleTrackpadScrollFlush()
+        }
+    }
+
+    private fun recordWheelEventForDiagnostics(event: MouseWheelEvent) {
+        if (!isDebugLoggingEnabled()) return
+
+        if (event.scrollType in TOUCH_SCROLL_BEGIN..TOUCH_SCROLL_END) {
+            touchScrollDiagnosticCount++
+        } else {
+            standardWheelDiagnosticCount++
+        }
+
+        val now = System.nanoTime()
+        if (now - lastWheelDiagnosticsAt < WHEEL_DIAGNOSTICS_INTERVAL_NS) return
+
+        thisLogger().info(
+            "Excalidraw OSR wheel diagnostics: touch=$touchScrollDiagnosticCount, " +
+                "standard=$standardWheelDiagnosticCount, adaptedStandard=$adaptedStandardWheelDiagnosticCount, " +
+                "dispatched=$scrollDispatchDiagnosticCount, " +
+                "acknowledged=$scrollAcknowledgementDiagnosticCount, " +
+                "inFlight=${trackpadScrollAccumulator.inFlightSequence != null}",
+        )
+        touchScrollDiagnosticCount = 0
+        standardWheelDiagnosticCount = 0
+        adaptedStandardWheelDiagnosticCount = 0
+        scrollDispatchDiagnosticCount = 0
+        scrollAcknowledgementDiagnosticCount = 0
+        lastWheelDiagnosticsAt = now
+    }
+
+    private fun cancelPendingTrackpadScroll() {
+        trackpadScrollTimer?.stop()
+        trackpadScrollAccumulator.reset()
+        highResolutionWheelDetector.reset()
+        pendingTrackpadWheelEvent = null
+        lastTrackpadScrollEventAt = null
+    }
+
+    private fun updateTrackpadScrollTimerDelay() {
+        trackpadScrollTimer?.takeUnless(Timer::isRunning)?.let { timer ->
+            val delay = trackpadScrollFrameDelayMs()
+            timer.delay = delay
+            timer.initialDelay = delay
+        }
+    }
+
+    private fun trackpadScrollFrameDelayMs(): Int = activeDisplayRefreshRate
+        ?.let { ceil(1_000.0 / it).toInt().coerceAtLeast(1) }
+        ?: 0
+
+    private fun sendTrackpadScrollToFrontend(dispatch: TrackpadScrollDispatch) {
+        val sourceEvent = pendingTrackpadWheelEvent ?: run {
+            trackpadScrollAccumulator.reset()
+            return
+        }
+        val hasHorizontalDelta = dispatch.deltaX.isFinite() && dispatch.deltaX != 0.0
+        val hasVerticalDelta = dispatch.deltaY.isFinite() && dispatch.deltaY != 0.0
+        if (!hasHorizontalDelta && !hasVerticalDelta) {
+            acknowledgeTrackpadScroll(dispatch.sequence)
+            return
+        }
+
+        executeJavaScript(
+            "window.excalidrawPlugin?.scroll(" +
+                "${dispatch.deltaX}, ${dispatch.deltaY}, ${sourceEvent.x}, ${sourceEvent.y}, " +
+                "${sourceEvent.isControlDown || sourceEvent.isMetaDown}, ${dispatch.sequence});",
+        )
+    }
+
+    private fun beginNativeMagnification(at: Point) {
+        executeJavaScript("window.excalidrawPlugin?.beginMagnification(${at.x}, ${at.y});")
+    }
+
+    private fun applyNativeMagnification(scale: Double) {
+        if (!scale.isFinite() || scale <= 0.0) return
+        executeJavaScript("window.excalidrawPlugin?.magnify(${scale});")
+    }
+
+    private fun endNativeMagnification() {
+        executeJavaScript("window.excalidrawPlugin?.endMagnification();")
     }
 
     private fun setupJsBridge() {
@@ -179,8 +410,17 @@ class ExcalidrawFileEditor(
             if (!isTrustedFrontend()) return@addHandler null
 
             ApplicationManager.getApplication().invokeLater {
+                cancelPendingTrackpadScroll()
                 pushDocumentToFrontend()
             }
+            null
+        }
+
+        scrollAppliedQuery.addHandler { payload ->
+            if (!isTrustedFrontend()) return@addHandler null
+
+            val sequence = payload.toLongOrNull() ?: return@addHandler null
+            runOnEdt { acknowledgeTrackpadScroll(sequence) }
             null
         }
 
@@ -349,7 +589,8 @@ class ExcalidrawFileEditor(
               saveCurrentDocument: function() { ${saveCurrentDocumentQuery.inject("''")} },
               themeChanged: function(payload) { ${themeChangedQuery.inject("payload")} },
               browseLibrary: function(payload) { ${browseLibraryQuery.inject("payload")} },
-              openExternalLink: function(payload) { ${openExternalLinkQuery.inject("payload")} }
+              openExternalLink: function(payload) { ${openExternalLinkQuery.inject("payload")} },
+              scrollApplied: function(payload) { ${scrollAppliedQuery.inject("payload")} }
             };
             window.dispatchEvent(new CustomEvent("intellij-excalidraw-bridge-ready"));
         """.trimIndent()
@@ -620,9 +861,58 @@ class ExcalidrawFileEditor(
         override fun canBeMergedWith(otherState: FileEditorState, level: FileEditorStateLevel): Boolean = level == FULL
     }
 
+    private class ExcalidrawZoomableViewport(
+        content: JComponent,
+        private val onMagnificationStarted: (Point) -> Unit,
+        private val onMagnified: (Double) -> Unit,
+        private val onMagnificationFinished: () -> Unit,
+    ) : JPanel(BorderLayout()), ZoomableViewport {
+        private val magnifier = Magnificator { _, at -> Point(at) }
+
+        var isMagnificationActive: Boolean = false
+            private set
+
+        init {
+            add(content, BorderLayout.CENTER)
+        }
+
+        override fun getMagnificator(): Magnificator = magnifier
+
+        override fun magnificationStarted(at: Point) {
+            isMagnificationActive = true
+            onMagnificationStarted(Point(at))
+        }
+
+        override fun magnify(magnification: Double) {
+            if (!isMagnificationActive) return
+
+            val scale = if (magnification < 0.0) {
+                1.0 / (1.0 - magnification)
+            } else {
+                1.0 + magnification
+            }
+            if (scale.isFinite() && scale > 0.0) {
+                onMagnified(scale)
+            }
+        }
+
+        override fun magnificationFinished(magnification: Double) {
+            if (!isMagnificationActive) return
+
+            magnify(magnification)
+            isMagnificationActive = false
+            onMagnificationFinished()
+        }
+    }
+
     private companion object {
         private const val SCENE_UPDATE_DELAY_MS = 250
-        private const val OSR_WHEEL_ROTATION_FACTOR = 40.0
+        private const val TOUCH_SCROLL_BEGIN = 2
+        private const val TOUCH_SCROLL_END = 4
+        private const val OSR_TRACKPAD_WHEEL_FACTOR = 40.0
+        private const val TRACKPAD_STREAM_CONTINUATION_MS = 250L
+        private const val TRACKPAD_STREAM_RESET_GAP_MS = 500L
+        private const val WHEEL_DIAGNOSTICS_INTERVAL_NS = 1_000_000_000L
 
         private fun isDebugLoggingEnabled(): Boolean =
             System.getProperty("excalidraw.plugin.debug")?.toBooleanStrictOrNull() == true ||
@@ -634,7 +924,9 @@ class ExcalidrawFileEditor(
         initialUrl: String,
         private val onLibrarySelected: (String) -> Unit,
     ) : DialogWrapper(project) {
-        private val libraryBrowser = JBCefBrowser()
+        private val libraryBrowser = JBCefBrowser.createBuilder()
+            .setOffScreenRendering(false)
+            .build()
         private val downloadLibraryQuery = JBCefJSQuery.create(libraryBrowser as JBCefBrowserBase)
         private val statusLabel = JLabel(" ")
         private val contentPanel = JPanel(BorderLayout())

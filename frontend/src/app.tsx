@@ -4,6 +4,11 @@ import { Excalidraw, serializeAsJSON, useHandleLibrary } from "@excalidraw/excal
 import "@excalidraw/excalidraw/index.css";
 import { EditorDocumentState, type SceneUpdate } from "./documentState";
 import {
+  nativeMagnificationUpdate,
+  type NativeMagnificationGesture
+} from "./nativeMagnification";
+import { nativePanUpdate, nativeWheelZoomUpdate } from "./nativeScroll";
+import {
   EMPTY_SCENE,
   getTheme,
   normalizePersistedImageStatuses,
@@ -24,6 +29,7 @@ type Bridge = {
   themeChanged: (payload: Theme) => void;
   browseLibrary: (url: string) => void;
   openExternalLink: (url: string) => void;
+  scrollApplied: (payload: string) => void;
 };
 
 declare global {
@@ -31,6 +37,17 @@ declare global {
     intellijExcalidraw?: Bridge;
     excalidrawPlugin?: {
       loadFile: (contents: string, preferredTheme: Theme, revision: number) => void;
+      beginMagnification: (viewportX: number, viewportY: number) => void;
+      magnify: (scale: number) => void;
+      endMagnification: () => void;
+      scroll: (
+        deltaX: number,
+        deltaY: number,
+        viewportX: number,
+        viewportY: number,
+        controlOrMeta: boolean,
+        sequence: number
+      ) => void;
     };
   }
 }
@@ -175,6 +192,39 @@ function useHelpDialogAttribution() {
   }, []);
 }
 
+const SCROLLABLE_OVERFLOW = new Set(["auto", "scroll", "overlay"]);
+
+function scrollDomAncestors(target: Element | null, deltaX: number, deltaY: number) {
+  let remainingX = deltaX;
+  let remainingY = deltaY;
+  let element: Element | null = target;
+
+  while (element && (remainingX !== 0 || remainingY !== 0)) {
+    if (element instanceof HTMLElement) {
+      const style = window.getComputedStyle(element);
+      if (SCROLLABLE_OVERFLOW.has(style.overflowX) && element.scrollWidth > element.clientWidth) {
+        const previous = element.scrollLeft;
+        const next = Math.min(element.scrollWidth - element.clientWidth, Math.max(0, previous + remainingX));
+        element.scrollLeft = next;
+        remainingX -= next - previous;
+      }
+      if (SCROLLABLE_OVERFLOW.has(style.overflowY) && element.scrollHeight > element.clientHeight) {
+        const previous = element.scrollTop;
+        const next = Math.min(element.scrollHeight - element.clientHeight, Math.max(0, previous + remainingY));
+        element.scrollTop = next;
+        remainingY -= next - previous;
+      }
+    }
+    element = element.parentElement;
+  }
+
+  return { deltaX: remainingX, deltaY: remainingY };
+}
+
+function acknowledgeScroll(sequence: number) {
+  window.intellijExcalidraw?.scrollApplied(String(sequence));
+}
+
 function App() {
   const [initialData, setInitialData] = React.useState<Scene>(EMPTY_SCENE);
   const [excalidrawApi, setExcalidrawApi] = React.useState<any>(null);
@@ -185,6 +235,7 @@ function App() {
   const loadingTimer = React.useRef<number | undefined>(undefined);
   const loadingScene = React.useRef(false);
   const lastTheme = React.useRef<Theme | undefined>(undefined);
+  const nativeMagnification = React.useRef<NativeMagnificationGesture | null>(null);
   const persistenceScheduler = React.useRef<ScenePersistenceScheduler | null>(null);
 
   if (!persistenceScheduler.current) {
@@ -258,6 +309,70 @@ function App() {
           setLoadError(error instanceof Error ? error.message : "The drawing could not be loaded.");
           console.error("Failed to load .excalidraw file", error);
         }
+      },
+      beginMagnification(viewportX: number, viewportY: number) {
+        const appState = api.current?.getAppState();
+        const initialZoom = appState?.zoom?.value;
+        if (
+          !Number.isFinite(viewportX) ||
+          !Number.isFinite(viewportY) ||
+          !Number.isFinite(initialZoom) ||
+          initialZoom <= 0
+        ) {
+          nativeMagnification.current = null;
+          return;
+        }
+
+        nativeMagnification.current = { initialZoom, viewportX, viewportY };
+      },
+      magnify(scale: number) {
+        const gesture = nativeMagnification.current;
+        const appState = api.current?.getAppState();
+        if (!gesture || !appState) {
+          return;
+        }
+
+        const update = nativeMagnificationUpdate(appState, gesture, scale);
+        if (update) {
+          api.current.updateScene({ appState: update });
+        }
+      },
+      endMagnification() {
+        nativeMagnification.current = null;
+      },
+      scroll(
+        deltaX: number,
+        deltaY: number,
+        viewportX: number,
+        viewportY: number,
+        controlOrMeta: boolean,
+        sequence: number
+      ) {
+        try {
+          const target = document.elementFromPoint(viewportX, viewportY);
+          const isCanvasTarget =
+            target instanceof HTMLCanvasElement ||
+            target instanceof HTMLTextAreaElement ||
+            target instanceof HTMLIFrameElement;
+
+          if (isCanvasTarget) {
+            const appState = api.current?.getAppState();
+            if (!appState) {
+              return;
+            }
+
+            const update = controlOrMeta
+              ? nativeWheelZoomUpdate(appState, deltaY, viewportX, viewportY)
+              : nativePanUpdate(appState, deltaX, deltaY);
+            if (update) {
+              api.current.updateScene({ appState: update });
+            }
+          } else if (!controlOrMeta) {
+            scrollDomAncestors(target, deltaX, deltaY);
+          }
+        } finally {
+          acknowledgeScroll(sequence);
+        }
       }
     };
 
@@ -266,6 +381,7 @@ function App() {
     return () => {
       window.clearTimeout(loadingTimer.current);
       persistenceScheduler.current?.cancel();
+      nativeMagnification.current = null;
       delete window.excalidrawPlugin;
     };
   }, []);

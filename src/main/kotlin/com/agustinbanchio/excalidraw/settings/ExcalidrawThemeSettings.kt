@@ -15,6 +15,24 @@ class ExcalidrawThemeSettings : PersistentStateComponent<ExcalidrawThemeSettings
     val preferredTheme: String
         get() = settingsState.preferredTheme ?: if (JBColor.isBright()) LIGHT else DARK
 
+    var adaptiveOsrFrameRateEnabled: Boolean
+        get() = settingsState.adaptiveOsrFrameRateEnabled
+        set(value) {
+            settingsState.adaptiveOsrFrameRateEnabled = value
+        }
+
+    var nativeTrackpadZoomEnabled: Boolean
+        get() = settingsState.nativeTrackpadZoomEnabled
+        set(value) {
+            settingsState.nativeTrackpadZoomEnabled = value
+        }
+
+    var coalescedTrackpadScrollingEnabled: Boolean
+        get() = settingsState.coalescedTrackpadScrollingEnabled
+        set(value) {
+            settingsState.coalescedTrackpadScrollingEnabled = value
+        }
+
     fun rememberTheme(theme: String) {
         if (theme == LIGHT || theme == DARK) {
             settingsState.preferredTheme = theme
@@ -29,6 +47,9 @@ class ExcalidrawThemeSettings : PersistentStateComponent<ExcalidrawThemeSettings
 
     class SettingsState {
         var preferredTheme: String? = null
+        var adaptiveOsrFrameRateEnabled: Boolean = true
+        var nativeTrackpadZoomEnabled: Boolean = true
+        var coalescedTrackpadScrollingEnabled: Boolean = true
     }
 
     companion object {

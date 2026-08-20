@@ -42,13 +42,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.2.10 - 2026-08-20</h3>
+        <h3>0.2.11 - 2026-08-21</h3>
         <ul>
-            <li>Restored trackpad panning and pinch-to-zoom in the embedded editor while preserving normal mouse-wheel behaviour.</li>
-            <li>Improved editing responsiveness by coalescing scene serialization and IDE bridge updates, with immediate flushing for saves and completed interactions.</li>
-            <li>Added JCEF profiling guidance for diagnosing canvas, serialization, bridge, and GPU performance.</li>
-            <li>Updated frontend dependencies and the default JetBrains development platform to IntelliJ IDEA 2026.1.5.</li>
+            <li>Improved macOS trackpad panning with responsive, frame-coalesced scrolling that follows the system scroll-direction preference.</li>
+            <li>Added native macOS pinch-to-zoom support with cursor-anchored Excalidraw zooming.</li>
+            <li>Improved scrolling in Excalidraw menus and other scrollable controls without changing normal mouse-wheel behaviour.</li>
+            <li>Requested non-OSR JCEF presentation when supported, with an automatic compatibility fallback for IDEs that require off-screen rendering.</li>
+            <li>Matched OSR rendering to the active display refresh rate and added editor settings for the refresh-rate, pinch, and trackpad adapters.</li>
         </ul>
+
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
@@ -66,6 +68,12 @@
             extensions="excalidraw"/>
 
         <fileEditorProvider implementation="com.agustinbanchio.excalidraw.editor.ExcalidrawFileEditorProvider"/>
+
+        <applicationConfigurable
+            id="com.agustinbanchio.excalidraw.settings"
+            parentId="tools"
+            displayName="Excalidraw Editor"
+            instance="com.agustinbanchio.excalidraw.settings.ExcalidrawSettingsConfigurable"/>
 
         <lang.parserDefinition
             language="Excalidraw"
