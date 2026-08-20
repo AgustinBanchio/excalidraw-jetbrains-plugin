@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { createReadStream, cpSync, existsSync, rmSync, statSync } from "node:fs";
+import { createReadStream, cpSync, existsSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { createRequire } from "node:module";
 
@@ -66,7 +66,6 @@ function excalidrawFontAssets() {
         throw new Error(`Could not find Excalidraw font assets at ${source}`);
       }
 
-      rmSync(target, { recursive: true, force: true });
       cpSync(source, target, { recursive: true });
     }
   };

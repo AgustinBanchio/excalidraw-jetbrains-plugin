@@ -206,6 +206,32 @@ or add this VM option:
 Console messages are written to the IDE log with the `Excalidraw JCEF console`
 prefix. Leave this disabled for normal use.
 
+## Profiling the Embedded Editor
+
+The frontend can be profiled with Chromium DevTools because it runs in JCEF.
+Set the `ide.browser.jcef.debug.port` registry key to an available port such as
+`9222`, restart the IDE, and attach Chrome DevTools or an IntelliJ
+JavaScript/Chrome debug configuration to that port. JetBrains also documents an
+embedded **Open DevTools** context-menu action for internal mode when
+`ide.browser.jcef.contextMenu.devTools.enabled` is enabled.
+
+In the DevTools **Performance** panel, record an idle period followed by a long
+drag, freehand stroke, and trackpad pan/zoom. The useful checks are:
+
+- idle recordings should contain no recurring plugin serialization or bridge
+  work;
+- `serializeScene` / `serializeAsJSON` should run after the interaction settles
+  or a pointer is released, rather than once per rendered frame;
+- JCEF callback work should occur once per coalesced scene revision, with large
+  documents split into transfer chunks only at that point;
+- the Rendering panel's FPS meter can distinguish canvas rendering cost from
+  bridge or serialization cost.
+
+The plugin does not disable Chromium GPU acceleration. GPU availability and
+off-screen/out-of-process rendering are controlled by the JetBrains runtime and
+the IDE's JCEF registry settings. Keep those settings at their defaults when
+profiling unless comparing a suspected platform-specific JCEF issue.
+
 ## Build and Install Locally
 
 Build the installable plugin ZIP:

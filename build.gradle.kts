@@ -41,7 +41,7 @@ plugins {
 }
 
 group = "com.agustinbanchio"
-version = "0.2.9"
+version = "0.2.10"
 
 val platformVersion = providers.gradleProperty("platformVersion")
 val platformProduct = providers.gradleProperty("platformProduct").orElse("idea")
@@ -129,6 +129,7 @@ tasks {
         group = "verification"
         description = "Runs the frontend unit tests."
         dependsOn("npmInstallFrontend")
+        mustRunAfter("buildFrontend")
         workingDir = frontendDir.asFile
         commandLine(npmExecutable, "test")
         inputs.dir(frontendDir.dir("src"))

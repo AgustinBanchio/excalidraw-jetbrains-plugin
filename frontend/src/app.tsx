@@ -12,6 +12,7 @@ import {
   type Scene,
   type Theme
 } from "./scene";
+import { ScenePersistenceScheduler, type SceneSnapshot } from "./scenePersistence";
 import "./styles.css";
 
 type Bridge = {
@@ -36,6 +37,7 @@ declare global {
 
 const HELP_ATTRIBUTION_TEXT = "JetBrains Excalidraw Editor by Agustin Banchio";
 const MAX_SCENE_TRANSFER_CHUNK_SIZE = 16_000;
+const SCENE_PERSISTENCE_DELAY_MS = 250;
 
 function serializeScene(elements: readonly unknown[], appState: unknown, files: Record<string, unknown>): string {
   return serializeAsJSON(
@@ -183,6 +185,31 @@ function App() {
   const loadingTimer = React.useRef<number | undefined>(undefined);
   const loadingScene = React.useRef(false);
   const lastTheme = React.useRef<Theme | undefined>(undefined);
+  const persistenceScheduler = React.useRef<ScenePersistenceScheduler | null>(null);
+
+  if (!persistenceScheduler.current) {
+    persistenceScheduler.current = new ScenePersistenceScheduler(
+      SCENE_PERSISTENCE_DELAY_MS,
+      (snapshot: SceneSnapshot, saveImmediately: boolean) => {
+        const serialized = serializeScene(snapshot.elements, snapshot.appState, snapshot.files);
+        const changed = serialized !== lastSerialized.current;
+
+        if (changed) {
+          lastSerialized.current = serialized;
+          documentState.current.updateScene(serialized);
+        }
+
+        if (changed || saveImmediately) {
+          const update = documentState.current.currentUpdate();
+          if (update) {
+            transmitSceneUpdate(window.intellijExcalidraw, update, saveImmediately);
+          } else if (saveImmediately) {
+            window.intellijExcalidraw?.saveCurrentDocument();
+          }
+        }
+      }
+    );
+  }
 
   useLibraryBrowserNavigation();
   useExternalLinkNavigation();
@@ -193,6 +220,7 @@ function App() {
     window.excalidrawPlugin = {
       loadFile(contents: string, preferredTheme: Theme, revision: number) {
         window.clearTimeout(loadingTimer.current);
+        persistenceScheduler.current?.cancel();
         loadingScene.current = true;
         lastSerialized.current = "";
         documentState.current.beginLoad(revision);
@@ -237,6 +265,7 @@ function App() {
 
     return () => {
       window.clearTimeout(loadingTimer.current);
+      persistenceScheduler.current?.cancel();
       delete window.excalidrawPlugin;
     };
   }, []);
@@ -245,17 +274,34 @@ function App() {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        const update = documentState.current.currentUpdate();
-        if (update) {
-          transmitSceneUpdate(window.intellijExcalidraw, update, true);
-        } else {
-          window.intellijExcalidraw?.saveCurrentDocument();
+        if (!persistenceScheduler.current?.flush(true)) {
+          const update = documentState.current.currentUpdate();
+          if (update) {
+            transmitSceneUpdate(window.intellijExcalidraw, update, true);
+          } else {
+            window.intellijExcalidraw?.saveCurrentDocument();
+          }
         }
       }
     };
 
+    const flushAfterPointerUp = () => {
+      window.setTimeout(() => persistenceScheduler.current?.flush(false), 0);
+    };
+    const flushBeforeHiding = () => {
+      if (document.visibilityState === "hidden") {
+        persistenceScheduler.current?.flush(false);
+      }
+    };
+
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("pointerup", flushAfterPointerUp);
+    document.addEventListener("visibilitychange", flushBeforeHiding);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("pointerup", flushAfterPointerUp);
+      document.removeEventListener("visibilitychange", flushBeforeHiding);
+    };
   }, []);
 
   return (
@@ -294,23 +340,11 @@ function App() {
             }
             lastTheme.current = theme;
 
-            const serialized = serializeScene(elements, appState, files);
-
             if (loadingScene.current || !lastSerialized.current) {
-              lastSerialized.current = serialized;
               return;
             }
 
-            if (serialized === lastSerialized.current) {
-              return;
-            }
-
-            lastSerialized.current = serialized;
-            documentState.current.updateScene(serialized);
-            const update = documentState.current.currentUpdate();
-            if (update) {
-              transmitSceneUpdate(window.intellijExcalidraw, update, false);
-            }
+            persistenceScheduler.current?.schedule({ elements, appState, files });
           }}
         />
       )}

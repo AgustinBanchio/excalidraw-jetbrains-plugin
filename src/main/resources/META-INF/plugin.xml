@@ -42,10 +42,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.2.9 - 2026-08-01</h3>
+        <h3>0.2.10 - 2026-08-20</h3>
         <ul>
-            <li>Added compatibility with JetBrains IDE 2026.2, including support for its standalone JCEF module.</li>
-            <li>Updated frontend and build dependencies, including React, TypeScript, Vite, Vitest, Kotlin, Gradle, and the IntelliJ Platform Gradle plugin.</li>
+            <li>Restored trackpad panning and pinch-to-zoom in the embedded editor while preserving normal mouse-wheel behaviour.</li>
+            <li>Improved editing responsiveness by coalescing scene serialization and IDE bridge updates, with immediate flushing for saves and completed interactions.</li>
+            <li>Added JCEF profiling guidance for diagnosing canvas, serialization, bridge, and GPU performance.</li>
+            <li>Updated frontend dependencies and the default JetBrains development platform to IntelliJ IDEA 2026.1.5.</li>
         </ul>
     ]]></change-notes>
 

@@ -23,22 +23,23 @@
   },
   "overrides": {
     "@excalidraw/mermaid-to-excalidraw": {
-      "nanoid": "5.1.15"
+      "nanoid": "5.1.16"
     },
-    "@mermaid-js/parser": "1.2.0",
+    "@mermaid-js/parser": "1.2.1",
     "@radix-ui/react-popover": "1.1.23",
     "@radix-ui/react-tabs": "1.1.21",
     "lodash-es": "4.18.1",
-    "nanoid": "3.3.16",
-    "dompurify": "3.4.12",
+    "nanoid": "3.3.18",
+    "dompurify": "3.4.14",
+    "mermaid": "11.17.0",
     "immutable": "4.3.9"
   },
   "devDependencies": {
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
-    "@vitejs/plugin-react": "6.0.5",
+    "@vitejs/plugin-react": "6.1.0",
     "typescript": "7.0.2",
-    "vite": "8.2.0",
-    "vitest": "4.1.10"
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
   }
 }

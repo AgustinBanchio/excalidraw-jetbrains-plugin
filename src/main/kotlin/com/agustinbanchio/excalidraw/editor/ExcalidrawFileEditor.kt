@@ -20,6 +20,7 @@ import com.intellij.openapi.fileEditor.FileEditorStateLevel.FULL
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.JBColor
@@ -40,6 +41,8 @@ import org.cef.handler.CefRequestHandlerAdapter
 import org.cef.network.CefRequest
 import java.awt.BorderLayout
 import java.awt.Dimension
+import java.awt.event.MouseWheelEvent
+import java.awt.event.MouseWheelListener
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
 import java.io.IOException
@@ -57,6 +60,7 @@ import java.time.Duration
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
+import kotlin.math.roundToInt
 
 class ExcalidrawFileEditor(
     private val project: Project,
@@ -81,8 +85,10 @@ class ExcalidrawFileEditor(
     @Volatile
     private var pendingSceneUpdate: PendingSceneUpdate? = null
     private var incomingSceneTransfer: IncomingSceneTransfer? = null
+    private var trackpadWheelListener: MouseWheelListener? = null
 
     init {
+        setupTrackpadGestures()
         setupJsBridge()
         setupDocumentListener()
         loadFrontend()
@@ -124,7 +130,46 @@ class ExcalidrawFileEditor(
         Disposer.dispose(themeChangedQuery)
         Disposer.dispose(browseLibraryQuery)
         Disposer.dispose(openExternalLinkQuery)
+        trackpadWheelListener?.let { browser.browserComponent?.removeMouseWheelListener(it) }
         Disposer.dispose(browser)
+    }
+
+    private fun setupTrackpadGestures() {
+        if (!browser.isOffScreenRendering) return
+
+        val browserComponent = browser.browserComponent ?: return
+        trackpadWheelListener = MouseWheelListener { event ->
+            // OSR converts precision trackpad scrolling into a single synthetic touch point.
+            // Excalidraw expects trackpad pan/pinch as wheel events, while genuine mouse wheels
+            // use the two standard AWT scroll types and must remain on JCEF's default path.
+            if (event.scrollType <= MouseWheelEvent.WHEEL_BLOCK_SCROLL) return@MouseWheelListener
+
+            event.consume()
+            var delta = event.preciseWheelRotation * event.scrollAmount * OSR_WHEEL_ROTATION_FACTOR
+            if (SystemInfo.isLinux || SystemInfo.isMac) {
+                delta *= -1
+            }
+
+            browser.cefBrowser.sendMouseWheelEvent(
+                MouseWheelEvent(
+                    event.component,
+                    MouseWheelEvent.MOUSE_WHEEL,
+                    event.`when`,
+                    event.modifiersEx,
+                    event.x,
+                    event.y,
+                    event.xOnScreen,
+                    event.yOnScreen,
+                    event.clickCount,
+                    event.isPopupTrigger,
+                    MouseWheelEvent.WHEEL_UNIT_SCROLL,
+                    1,
+                    delta.roundToInt(),
+                    delta,
+                ),
+            )
+        }
+        browserComponent.addMouseWheelListener(trackpadWheelListener)
     }
 
     private fun setupJsBridge() {
@@ -577,6 +622,7 @@ class ExcalidrawFileEditor(
 
     private companion object {
         private const val SCENE_UPDATE_DELAY_MS = 250
+        private const val OSR_WHEEL_ROTATION_FACTOR = 40.0
 
         private fun isDebugLoggingEnabled(): Boolean =
             System.getProperty("excalidraw.plugin.debug")?.toBooleanStrictOrNull() == true ||

@@ -25,7 +25,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `@floating-ui/utils@0.2.12` | MIT | [N8](#n8) | https://github.com/floating-ui/floating-ui |
 | `@iconify/types@2.0.0` | MIT | [N9](#n9) | https://github.com/iconify/iconify |
 | `@iconify/utils@3.1.3` | MIT | [N10](#n10) | https://github.com/iconify/iconify |
-| `@mermaid-js/parser@1.2.0` | MIT | [N11](#n11) | https://github.com/mermaid-js/mermaid |
+| `@mermaid-js/parser@1.2.1` | MIT | [N11](#n11) | https://github.com/mermaid-js/mermaid |
 | `@radix-ui/primitive@1.1.7` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/react-arrow@1.1.15` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/react-collection@1.1.15` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
@@ -106,7 +106,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `csstype@3.2.3` | MIT | [N27](#n27) | https://github.com/frenic/csstype |
 | `cytoscape-cose-bilkent@4.1.0` | MIT | [N28](#n28) | https://github.com/cytoscape/cytoscape.js-cose-bilkent |
 | `cytoscape-fcose@2.2.0` | MIT | [N29](#n29) | https://github.com/iVis-at-Bilkent/cytoscape.js-fcose |
-| `cytoscape@3.33.4` | MIT | [N30](#n30) | https://github.com/cytoscape/cytoscape.js |
+| `cytoscape@3.34.1` | MIT | [N30](#n30) | https://github.com/cytoscape/cytoscape.js |
 | `d3-array@2.12.1` | BSD-3-Clause | [N31](#n31) | https://github.com/d3/d3-array |
 | `d3-array@3.2.4` | ISC | [N32](#n32) | https://github.com/d3/d3-array |
 | `d3-axis@3.0.0` | ISC | [N33](#n33) | https://github.com/d3/d3-axis |
@@ -146,90 +146,92 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `dayjs@1.11.21` | MIT | [N48](#n48) | https://github.com/iamkun/dayjs |
 | `delaunator@5.1.0` | ISC | [N49](#n49) | https://github.com/mapbox/delaunator |
 | `detect-node-es@1.1.0` | MIT | [N50](#n50) | https://github.com/thekashey/detect-node |
-| `dompurify@3.4.12` | (MPL-2.0 OR Apache-2.0) | [N51](#n51) | https://github.com/cure53/DOMPurify |
+| `dompurify@3.4.14` | (MPL-2.0 OR Apache-2.0) | [N51](#n51) | https://github.com/cure53/DOMPurify |
 | `es-toolkit@1.47.0` | MIT | [N52](#n52) | https://github.com/toss/es-toolkit |
 | `es6-promise-pool@2.5.0` | MIT | [N53](#n53) | timdp/es6-promise-pool |
+| `fastdom@1.0.12` | MIT | [N54](#n54) | https://github.com/wilsonpage/fastdom |
 | `fill-range@7.1.1` | MIT | [N18](#n18) | jonschlinkert/fill-range |
-| `fractional-indexing@3.2.0` | CC0-1.0 | [N54](#n54) | https://github.com/rocicorp/fractional-indexing |
-| `fsevents@2.3.3` | MIT | [N55](#n55) | https://www.npmjs.com/package/fsevents/v/2.3.3 |
-| `fuzzy@0.1.3` | MIT | [N56](#n56) | https://github.com/mattyork/fuzzy |
-| `get-nonce@1.0.1` | MIT | [N57](#n57) | git@github.com:theKashey/get-nonce |
-| `glob-parent@5.1.2` | ISC | [N58](#n58) | gulpjs/glob-parent |
-| `glur@1.1.2` | MIT | [N59](#n59) | nodeca/glur |
-| `hachure-fill@0.5.2` | MIT | [N60](#n60) | https://github.com/pshihn/hachure-fill |
-| `iconv-lite@0.6.3` | MIT | [N61](#n61) | https://github.com/ashtuchkin/iconv-lite |
-| `image-blob-reduce@3.0.1` | MIT | [N62](#n62) | nodeca/image-blob-reduce |
-| `immutable@4.3.9` | MIT | [N63](#n63) | https://github.com/immutable-js/immutable-js |
-| `import-meta-resolve@4.2.0` | MIT | [N64](#n64) | wooorm/import-meta-resolve |
-| `inherits@2.0.4` | ISC | [N65](#n65) | https://github.com/isaacs/inherits |
-| `internmap@1.0.1` | ISC | [N66](#n66) | https://github.com/mbostock/internmap |
-| `internmap@2.0.3` | ISC | [N66](#n66) | https://github.com/mbostock/internmap |
-| `is-binary-path@2.1.0` | MIT | [N67](#n67) | sindresorhus/is-binary-path |
-| `is-extglob@2.1.1` | MIT | [N68](#n68) | jonschlinkert/is-extglob |
-| `is-glob@4.0.3` | MIT | [N69](#n69) | micromatch/is-glob |
+| `fractional-indexing@3.2.0` | CC0-1.0 | [N55](#n55) | https://github.com/rocicorp/fractional-indexing |
+| `fsevents@2.3.3` | MIT | [N56](#n56) | https://www.npmjs.com/package/fsevents/v/2.3.3 |
+| `fuzzy@0.1.3` | MIT | [N57](#n57) | https://github.com/mattyork/fuzzy |
+| `get-nonce@1.0.1` | MIT | [N58](#n58) | git@github.com:theKashey/get-nonce |
+| `glob-parent@5.1.2` | ISC | [N59](#n59) | gulpjs/glob-parent |
+| `glur@1.1.2` | MIT | [N60](#n60) | nodeca/glur |
+| `hachure-fill@0.5.2` | MIT | [N61](#n61) | https://github.com/pshihn/hachure-fill |
+| `iconv-lite@0.6.3` | MIT | [N62](#n62) | https://github.com/ashtuchkin/iconv-lite |
+| `image-blob-reduce@3.0.1` | MIT | [N63](#n63) | nodeca/image-blob-reduce |
+| `immutable@4.3.9` | MIT | [N64](#n64) | https://github.com/immutable-js/immutable-js |
+| `import-meta-resolve@4.2.0` | MIT | [N65](#n65) | wooorm/import-meta-resolve |
+| `inherits@2.0.4` | ISC | [N66](#n66) | https://github.com/isaacs/inherits |
+| `internmap@1.0.1` | ISC | [N67](#n67) | https://github.com/mbostock/internmap |
+| `internmap@2.0.3` | ISC | [N67](#n67) | https://github.com/mbostock/internmap |
+| `is-binary-path@2.1.0` | MIT | [N68](#n68) | sindresorhus/is-binary-path |
+| `is-extglob@2.1.1` | MIT | [N69](#n69) | jonschlinkert/is-extglob |
+| `is-glob@4.0.3` | MIT | [N70](#n70) | micromatch/is-glob |
 | `is-number@7.0.0` | MIT | [N18](#n18) | jonschlinkert/is-number |
-| `isexe@2.0.0` | ISC | [N70](#n70) | https://github.com/isaacs/isexe |
-| `jotai-scope@0.7.2` | MIT | [N71](#n71) | https://github.com/jotaijs/jotai-scope |
-| `jotai@2.11.0` | MIT | [N72](#n72) | https://github.com/pmndrs/jotai |
-| `katex@0.16.47` | MIT | [N73](#n73) | https://github.com/KaTeX/KaTeX |
-| `khroma@2.1.0` | MIT | [N74](#n74) | github:fabiospampinato/khroma |
-| `layout-base@1.0.2` | MIT | [N75](#n75) | https://github.com/iVis-at-Bilkent/layout-base |
-| `layout-base@2.0.1` | MIT | [N75](#n75) | https://github.com/iVis-at-Bilkent/layout-base |
-| `lodash-es@4.18.1` | MIT | [N76](#n76) | lodash/lodash |
-| `lodash.debounce@4.0.8` | MIT | [N77](#n77) | lodash/lodash |
-| `lodash.throttle@4.1.1` | MIT | [N77](#n77) | lodash/lodash |
-| `marked@16.4.2` | MIT | [N78](#n78) | https://github.com/markedjs/marked |
-| `mermaid@11.15.0` | MIT | [N79](#n79) | https://github.com/mermaid-js/mermaid |
-| `multimath@2.0.0` | MIT | [N80](#n80) | nodeca/multimath |
-| `nanoid@3.3.16` | MIT | [N81](#n81) | ai/nanoid |
-| `nanoid@5.1.15` | MIT | [N82](#n82) | ai/nanoid |
-| `normalize-path@3.0.0` | MIT | [N83](#n83) | jonschlinkert/normalize-path |
-| `object-assign@4.1.1` | MIT | [N84](#n84) | sindresorhus/object-assign |
-| `open-color@1.9.1` | MIT | [N85](#n85) | https://github.com/yeun/open-color |
-| `package-manager-detector@1.6.0` | MIT | [N86](#n86) | https://github.com/antfu-collective/package-manager-detector |
-| `pako@2.0.3` | (MIT AND Zlib) | [N87](#n87) | nodeca/pako |
-| `path-data-parser@0.1.0` | MIT | [N88](#n88) | https://github.com/pshihn/path-data-parser |
-| `path-key@3.1.1` | MIT | [N89](#n89) | sindresorhus/path-key |
-| `perfect-freehand@1.2.0` | MIT | [N90](#n90) | https://github.com/steveruizok/perfect-freehand |
-| `pica@7.1.1` | MIT | [N91](#n91) | nodeca/pica |
-| `picomatch@2.3.2` | MIT | [N92](#n92) | micromatch/picomatch |
-| `png-chunk-text@1.0.0` | MIT | [N93](#n93) | https://github.com/hughsk/png-chunk-text |
-| `png-chunks-encode@1.0.0` | MIT | [N93](#n93) | https://github.com/hughsk/png-chunks-encode |
-| `png-chunks-extract@1.0.0` | MIT | [N93](#n93) | https://github.com/hughsk/png-chunks-extract |
-| `points-on-curve@0.2.0` | MIT | [N88](#n88) | https://github.com/pshihn/bezier-points |
-| `points-on-curve@1.0.1` | MIT | [N88](#n88) | https://github.com/pshihn/bezier-points |
-| `points-on-path@0.2.1` | MIT | [N94](#n94) | https://github.com/pshihn/points-on-path |
-| `pwacompat@2.0.17` | Apache-2.0 | [N95](#n95) | https://github.com/GoogleChrome/pwacompat |
-| `react-dom@19.2.8` | MIT | [N96](#n96) | https://github.com/react/react |
+| `isexe@2.0.0` | ISC | [N71](#n71) | https://github.com/isaacs/isexe |
+| `jotai-scope@0.7.2` | MIT | [N72](#n72) | https://github.com/jotaijs/jotai-scope |
+| `jotai@2.11.0` | MIT | [N73](#n73) | https://github.com/pmndrs/jotai |
+| `katex@0.16.47` | MIT | [N74](#n74) | https://github.com/KaTeX/KaTeX |
+| `khroma@2.1.0` | MIT | [N75](#n75) | github:fabiospampinato/khroma |
+| `layout-base@1.0.2` | MIT | [N76](#n76) | https://github.com/iVis-at-Bilkent/layout-base |
+| `layout-base@2.0.1` | MIT | [N76](#n76) | https://github.com/iVis-at-Bilkent/layout-base |
+| `lodash-es@4.18.1` | MIT | [N77](#n77) | lodash/lodash |
+| `lodash.debounce@4.0.8` | MIT | [N78](#n78) | lodash/lodash |
+| `lodash.throttle@4.1.1` | MIT | [N78](#n78) | lodash/lodash |
+| `marked@16.4.2` | MIT | [N79](#n79) | https://github.com/markedjs/marked |
+| `mermaid@11.17.0` | MIT | [N80](#n80) | https://github.com/mermaid-js/mermaid |
+| `multimath@2.0.0` | MIT | [N81](#n81) | nodeca/multimath |
+| `nanoid@3.3.18` | MIT | [N82](#n82) | ai/nanoid |
+| `nanoid@5.1.16` | MIT | [N83](#n83) | ai/nanoid |
+| `normalize-path@3.0.0` | MIT | [N84](#n84) | jonschlinkert/normalize-path |
+| `object-assign@4.1.1` | MIT | [N85](#n85) | sindresorhus/object-assign |
+| `open-color@1.9.1` | MIT | [N86](#n86) | https://github.com/yeun/open-color |
+| `package-manager-detector@1.6.0` | MIT | [N87](#n87) | https://github.com/antfu-collective/package-manager-detector |
+| `pako@2.0.3` | (MIT AND Zlib) | [N88](#n88) | nodeca/pako |
+| `path-data-parser@0.1.0` | MIT | [N89](#n89) | https://github.com/pshihn/path-data-parser |
+| `path-key@3.1.1` | MIT | [N90](#n90) | sindresorhus/path-key |
+| `perfect-freehand@1.2.0` | MIT | [N91](#n91) | https://github.com/steveruizok/perfect-freehand |
+| `pica@7.1.1` | MIT | [N92](#n92) | nodeca/pica |
+| `picomatch@2.3.2` | MIT | [N93](#n93) | micromatch/picomatch |
+| `png-chunk-text@1.0.0` | MIT | [N94](#n94) | https://github.com/hughsk/png-chunk-text |
+| `png-chunks-encode@1.0.0` | MIT | [N94](#n94) | https://github.com/hughsk/png-chunks-encode |
+| `png-chunks-extract@1.0.0` | MIT | [N94](#n94) | https://github.com/hughsk/png-chunks-extract |
+| `points-on-curve@0.2.0` | MIT | [N89](#n89) | https://github.com/pshihn/bezier-points |
+| `points-on-curve@1.0.1` | MIT | [N89](#n89) | https://github.com/pshihn/bezier-points |
+| `points-on-path@0.2.1` | MIT | [N95](#n95) | https://github.com/pshihn/points-on-path |
+| `pwacompat@2.0.17` | Apache-2.0 | [N96](#n96) | https://github.com/GoogleChrome/pwacompat |
+| `react-dom@19.2.8` | MIT | [N97](#n97) | https://github.com/react/react |
 | `react-remove-scroll-bar@2.3.8` | MIT | [N16](#n16) | https://github.com/theKashey/react-remove-scroll-bar |
 | `react-remove-scroll@2.7.2` | MIT | [N16](#n16) | https://github.com/theKashey/react-remove-scroll |
 | `react-style-singleton@2.2.3` | MIT | [N16](#n16) | https://github.com/theKashey/react-style-singleton |
-| `react@19.2.8` | MIT | [N96](#n96) | https://github.com/react/react |
-| `readdirp@3.6.0` | MIT | [N97](#n97) | https://github.com/paulmillr/readdirp |
-| `robust-predicates@3.0.3` | Unlicense | [N98](#n98) | https://github.com/mourner/robust-predicates |
-| `roughjs@4.6.4` | MIT | [N99](#n99) | https://github.com/pshihn/rough |
-| `roughjs@4.6.6` | MIT | [N99](#n99) | https://github.com/pshihn/rough |
-| `rw@1.3.3` | BSD-3-Clause | [N100](#n100) | http://github.com/mbostock/rw |
-| `safer-buffer@2.1.2` | MIT | [N101](#n101) | https://github.com/ChALkeR/safer-buffer |
-| `sass@1.51.0` | MIT | [N102](#n102) | https://github.com/sass/dart-sass |
-| `scheduler@0.27.0` | MIT | [N96](#n96) | https://github.com/facebook/react |
-| `shebang-command@2.0.0` | MIT | [N103](#n103) | kevva/shebang-command |
-| `shebang-regex@3.0.0` | MIT | [N89](#n89) | sindresorhus/shebang-regex |
-| `sliced@1.0.1` | MIT | [N104](#n104) | https://github.com/aheckmann/sliced |
-| `source-map-js@1.2.1` | BSD-3-Clause | [N105](#n105) | 7rulnik/source-map-js |
-| `stylis@4.4.0` | MIT | [N106](#n106) | https://github.com/thysultan/stylis.js |
-| `tinyexec@1.2.3` | MIT | [N107](#n107) | https://github.com/tinylibs/tinyexec |
-| `to-regex-range@5.0.1` | MIT | [N108](#n108) | micromatch/to-regex-range |
-| `ts-dedent@2.2.0` | MIT | [N109](#n109) | https://github.com/tamino-martinius/node-ts-dedent |
-| `tslib@2.8.1` | 0BSD | [N110](#n110) | https://github.com/Microsoft/tslib |
-| `tunnel-rat@0.1.2` | MIT | [N111](#n111) | https://github.com/pmndrs/tunnel-rat |
+| `react@19.2.8` | MIT | [N97](#n97) | https://github.com/react/react |
+| `readdirp@3.6.0` | MIT | [N98](#n98) | https://github.com/paulmillr/readdirp |
+| `robust-predicates@3.0.3` | Unlicense | [N99](#n99) | https://github.com/mourner/robust-predicates |
+| `roughjs@4.6.4` | MIT | [N100](#n100) | https://github.com/pshihn/rough |
+| `roughjs@4.6.6` | MIT | [N100](#n100) | https://github.com/pshihn/rough |
+| `rw@1.3.3` | BSD-3-Clause | [N101](#n101) | http://github.com/mbostock/rw |
+| `safer-buffer@2.1.2` | MIT | [N102](#n102) | https://github.com/ChALkeR/safer-buffer |
+| `sass@1.51.0` | MIT | [N103](#n103) | https://github.com/sass/dart-sass |
+| `scheduler@0.27.0` | MIT | [N97](#n97) | https://github.com/facebook/react |
+| `shebang-command@2.0.0` | MIT | [N104](#n104) | kevva/shebang-command |
+| `shebang-regex@3.0.0` | MIT | [N90](#n90) | sindresorhus/shebang-regex |
+| `sliced@1.0.1` | MIT | [N105](#n105) | https://github.com/aheckmann/sliced |
+| `source-map-js@1.2.1` | BSD-3-Clause | [N106](#n106) | 7rulnik/source-map-js |
+| `strictdom@1.0.1` | MIT | [N107](#n107) | https://github.com/wilsonpage/strictdom |
+| `stylis@4.4.0` | MIT | [N108](#n108) | https://github.com/thysultan/stylis.js |
+| `tinyexec@1.2.3` | MIT | [N109](#n109) | https://github.com/tinylibs/tinyexec |
+| `to-regex-range@5.0.1` | MIT | [N110](#n110) | micromatch/to-regex-range |
+| `ts-dedent@2.2.0` | MIT | [N111](#n111) | https://github.com/tamino-martinius/node-ts-dedent |
+| `tslib@2.8.1` | 0BSD | [N112](#n112) | https://github.com/Microsoft/tslib |
+| `tunnel-rat@0.1.2` | MIT | [N113](#n113) | https://github.com/pmndrs/tunnel-rat |
 | `use-callback-ref@1.3.3` | MIT | [N16](#n16) | https://github.com/theKashey/use-callback-ref/ |
 | `use-sidecar@1.1.3` | MIT | [N16](#n16) | https://github.com/theKashey/use-sidecar |
-| `use-sync-external-store@1.6.0` | MIT | [N96](#n96) | https://github.com/facebook/react |
-| `uuid@14.0.0` | MIT | [N112](#n112) | https://github.com/uuidjs/uuid |
-| `webworkify@1.5.0` | MIT | [N113](#n113) | https://github.com/substack/webworkify |
-| `which@2.0.2` | ISC | [N70](#n70) | https://github.com/isaacs/node-which |
-| `zustand@4.5.7` | MIT | [N114](#n114) | https://github.com/pmndrs/zustand |
+| `use-sync-external-store@1.6.0` | MIT | [N97](#n97) | https://github.com/facebook/react |
+| `uuid@14.0.0` | MIT | [N114](#n114) | https://github.com/uuidjs/uuid |
+| `webworkify@1.5.0` | MIT | [N115](#n115) | https://github.com/substack/webworkify |
+| `which@2.0.2` | ISC | [N71](#n71) | https://github.com/isaacs/node-which |
+| `zustand@4.5.7` | MIT | [N116](#n116) | https://github.com/pmndrs/zustand |
 
 ## License And Notice Texts
 
@@ -2219,6 +2221,30 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
 ### N54
 
+    MIT License
+
+    Copyright (c) 2016 Wilson Page <wilsonpage@me.com>
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+### N55
+
     Creative Commons Legal Code
 
     CC0 1.0 Universal
@@ -2341,7 +2367,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
         party to this document and has no duty or obligation with respect to
         this CC0 or use of the Work.
 
-### N55
+### N56
 
     MIT License
 
@@ -2365,7 +2391,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N56
+### N57
 
     Copyright (c) 2012 Matt York
 
@@ -2390,7 +2416,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
-### N57
+### N58
 
     MIT License
 
@@ -2414,7 +2440,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N58
+### N59
 
     The ISC License
 
@@ -2432,7 +2458,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
     IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-### N59
+### N60
 
     The MIT License (MIT)
 
@@ -2456,7 +2482,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N60
+### N61
 
     MIT License
 
@@ -2480,7 +2506,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N61
+### N62
 
     Copyright (c) 2011 Alexander Shtuchkin
 
@@ -2503,7 +2529,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N62
+### N63
 
     (The MIT License)
 
@@ -2527,7 +2553,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N63
+### N64
 
     MIT License
 
@@ -2551,7 +2577,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N64
+### N65
 
     (The MIT License)
 
@@ -2628,7 +2654,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     IN THE SOFTWARE.
     """
 
-### N65
+### N66
 
     The ISC License
 
@@ -2646,7 +2672,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
     PERFORMANCE OF THIS SOFTWARE.
 
-### N66
+### N67
 
     Copyright 2021 Mike Bostock
 
@@ -2662,7 +2688,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
     THIS SOFTWARE.
 
-### N67
+### N68
 
     MIT License
 
@@ -2674,7 +2700,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N68
+### N69
 
     The MIT License (MIT)
 
@@ -2698,7 +2724,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N69
+### N70
 
     The MIT License (MIT)
 
@@ -2722,7 +2748,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N70
+### N71
 
     The ISC License
 
@@ -2740,7 +2766,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
     IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-### N71
+### N72
 
     The MIT License (MIT)
 
@@ -2764,7 +2790,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N72
+### N73
 
     MIT License
 
@@ -2788,7 +2814,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N73
+### N74
 
     The MIT License (MIT)
 
@@ -2812,7 +2838,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N74
+### N75
 
     The MIT License (MIT)
 
@@ -2836,7 +2862,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
     DEALINGS IN THE SOFTWARE.
 
-### N75
+### N76
 
     MIT License
 
@@ -2860,7 +2886,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N76
+### N77
 
     Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
 
@@ -2910,7 +2936,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     licenses; we recommend you read them, as their terms may differ from the
     terms above.
 
-### N77
+### N78
 
     Copyright jQuery Foundation and other contributors <https://jquery.org/>
 
@@ -2960,7 +2986,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     licenses; we recommend you read them, as their terms may differ from the
     terms above.
 
-### N78
+### N79
 
     # License information
 
@@ -3007,7 +3033,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
     This software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
 
-### N79
+### N80
 
     The MIT License (MIT)
 
@@ -3031,7 +3057,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N80
+### N81
 
     (The MIT License)
 
@@ -3055,7 +3081,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N81
+### N82
 
     The MIT License (MIT)
 
@@ -3078,7 +3104,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N82
+### N83
 
     The MIT License (MIT)
 
@@ -3101,7 +3127,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N83
+### N84
 
     The MIT License (MIT)
 
@@ -3125,7 +3151,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N84
+### N85
 
     The MIT License (MIT)
 
@@ -3149,7 +3175,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N85
+### N86
 
     MIT License
 
@@ -3173,7 +3199,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N86
+### N87
 
     MIT License
 
@@ -3197,7 +3223,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N87
+### N88
 
     (The MIT License)
 
@@ -3221,7 +3247,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N88
+### N89
 
     MIT License
 
@@ -3245,7 +3271,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N89
+### N90
 
     MIT License
 
@@ -3257,7 +3283,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N90
+### N91
 
     MIT License
 
@@ -3281,7 +3307,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N91
+### N92
 
     (The MIT License)
 
@@ -3305,7 +3331,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N92
+### N93
 
     The MIT License (MIT)
 
@@ -3329,7 +3355,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N93
+### N94
 
     The MIT License (MIT)
     Copyright (c) 2015 Hugh Kennedy
@@ -3352,7 +3378,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
     OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N94
+### N95
 
     MIT License
 
@@ -3376,7 +3402,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N95
+### N96
 
     Apache License
                                Version 2.0, January 2004
@@ -3580,7 +3606,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
        See the License for the specific language governing permissions and
        limitations under the License.
 
-### N96
+### N97
 
     MIT License
 
@@ -3604,7 +3630,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N97
+### N98
 
     MIT License
 
@@ -3628,7 +3654,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N98
+### N99
 
     This is free and unencumbered software released into the public domain.
 
@@ -3655,7 +3681,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
     For more information, please refer to <http://unlicense.org>
 
-### N99
+### N100
 
     MIT License
 
@@ -3679,7 +3705,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N100
+### N101
 
     Copyright (c) 2014-2016, Michael Bostock
     All rights reserved.
@@ -3708,7 +3734,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
     EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-### N101
+### N102
 
     MIT License
 
@@ -3732,7 +3758,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N102
+### N103
 
     Dart Sass license:
 
@@ -5267,7 +5293,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-### N103
+### N104
 
     MIT License
 
@@ -5279,7 +5305,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N104
+### N105
 
     (The MIT License)
 
@@ -5304,7 +5330,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N105
+### N106
 
     Copyright (c) 2009-2011, Mozilla Foundation and contributors
     All rights reserved.
@@ -5334,7 +5360,31 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-### N106
+### N107
+
+    MIT License
+
+    Copyright (c) 2013 Wilson Page <wilsonpage@me.com>
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+### N108
 
     MIT License
 
@@ -5358,7 +5408,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N107
+### N109
 
     MIT License
 
@@ -5382,7 +5432,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N108
+### N110
 
     The MIT License (MIT)
 
@@ -5406,7 +5456,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 
-### N109
+### N111
 
     MIT License
 
@@ -5430,7 +5480,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N110
+### N112
 
     Copyright (c) Microsoft Corporation.
 
@@ -5445,7 +5495,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
     PERFORMANCE OF THIS SOFTWARE.
 
-### N111
+### N113
 
     MIT License
 
@@ -5469,7 +5519,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-### N112
+### N114
 
     The MIT License (MIT)
 
@@ -5481,7 +5531,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N113
+### N115
 
     This software is released under the MIT license:
 
@@ -5502,7 +5552,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### N114
+### N116
 
     MIT License
 

@@ -48,9 +48,17 @@ const fallbackNotices = {
     license: "MIT",
     text: mitLicense("2010-2020 Philipp Dunkel, Ben Noordhuis, Elan Shankar, Paul Miller"),
   },
+  fastdom: {
+    license: "MIT",
+    text: mitLicense("2016 Wilson Page <wilsonpage@me.com>"),
+  },
   khroma: {
     license: "MIT",
     text: mitLicense("2019-present Fabio Spampinato, Andrew Maney"),
+  },
+  strictdom: {
+    license: "MIT",
+    text: mitLicense("2013 Wilson Page <wilsonpage@me.com>"),
   },
 };
 
