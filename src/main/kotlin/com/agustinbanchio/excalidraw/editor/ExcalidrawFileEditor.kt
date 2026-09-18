@@ -1,6 +1,7 @@
 package com.agustinbanchio.excalidraw.editor
 
 import com.agustinbanchio.excalidraw.settings.ExcalidrawThemeSettings
+import com.agustinbanchio.excalidraw.file.DrawingFormat
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
@@ -12,17 +13,26 @@ import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.fileChooser.FileChooserFactory
 import com.intellij.openapi.fileChooser.FileSaverDescriptor
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorLocation
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.fileEditor.FileEditorStateLevel
 import com.intellij.openapi.fileEditor.FileEditorStateLevel.FULL
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.project.VetoableProjectManagerListener
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.Magnificator
 import com.intellij.ui.components.ZoomableViewport
@@ -64,6 +74,9 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -78,8 +91,11 @@ class ExcalidrawFileEditor(
     private val adaptiveOsrFrameRateEnabled = pluginSettings.adaptiveOsrFrameRateEnabled
     private val nativeTrackpadZoomEnabled = pluginSettings.nativeTrackpadZoomEnabled
     private val coalescedTrackpadScrollingEnabled = pluginSettings.coalescedTrackpadScrollingEnabled
-    private val document: Document = FileDocumentManager.getInstance().getDocument(virtualFile)
-        ?: error("Unable to open document for ${virtualFile.path}")
+    private val format = DrawingFormat.fromName(virtualFile.name) ?: DrawingFormat.JSON
+    private val document: Document? = if (format == DrawingFormat.PNG) null else
+        FileDocumentManager.getInstance().getDocument(virtualFile)
+            ?: error("Unable to open document for ${virtualFile.path}")
+    private val binaryDocument = if (format == DrawingFormat.PNG) BinaryImageDocument(virtualFile.contentsToByteArray()) else null
     private val browser = JBCefBrowser.createBuilder()
         .setOffScreenRendering(false)
         .build()
@@ -102,12 +118,22 @@ class ExcalidrawFileEditor(
     private val appendSceneTransferChunkQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val completeSceneTransferQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val saveCurrentDocumentQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val saveFinishedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
+    private val sceneDirtyQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val themeChangedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val browseLibraryQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val openExternalLinkQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val scrollAppliedQuery = JBCefJSQuery.create(browser as JBCefBrowserBase)
     private val sceneUpdateAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private var disposed = false
+    private var frontendReady = false
+    private var frontendDirty = false
+    private var saveFailure: String? = null
+    private var nextSaveRequest = 0L
+    private val saveRequests = mutableMapOf<String, CompletableFuture<Unit>>()
+    private var closeAllowed = false
+    @Volatile
+    private var saveModality: ModalityState? = null
     private var documentRevision = 1L
     private var applyingFrontendScene = false
     @Volatile
@@ -134,6 +160,8 @@ class ExcalidrawFileEditor(
         setupTrackpadGestures()
         setupJsBridge()
         setupDocumentListener()
+        setupSaveListeners()
+        ExcalidrawSaveGuard.editors.add(this)
         loadFrontend()
     }
 
@@ -147,7 +175,8 @@ class ExcalidrawFileEditor(
 
     override fun setState(state: FileEditorState) = Unit
 
-    override fun isModified(): Boolean = FileDocumentManager.getInstance().isDocumentUnsaved(document)
+    override fun isModified(): Boolean = frontendDirty || pendingSceneUpdate != null ||
+        (document?.let { FileDocumentManager.getInstance().isDocumentUnsaved(it) } ?: binaryDocument!!.isModified)
 
     override fun isValid(): Boolean = virtualFile.isValid
 
@@ -164,12 +193,18 @@ class ExcalidrawFileEditor(
     override fun dispose() {
         sceneUpdateAlarm.cancelAllRequests()
         flushPendingFrontendScene(saveAfterUpdate = true)
+        if (!closeAllowed) saveDocument()
         disposed = true
+        ExcalidrawSaveGuard.editors.remove(this)
+        saveRequests.values.forEach { it.completeExceptionally(IOException("The editor was closed.")) }
+        saveRequests.clear()
         Disposer.dispose(readyQuery)
         Disposer.dispose(beginSceneTransferQuery)
         Disposer.dispose(appendSceneTransferChunkQuery)
         Disposer.dispose(completeSceneTransferQuery)
         Disposer.dispose(saveCurrentDocumentQuery)
+        Disposer.dispose(saveFinishedQuery)
+        Disposer.dispose(sceneDirtyQuery)
         Disposer.dispose(themeChangedQuery)
         Disposer.dispose(browseLibraryQuery)
         Disposer.dispose(openExternalLinkQuery)
@@ -410,6 +445,7 @@ class ExcalidrawFileEditor(
             if (!isTrustedFrontend()) return@addHandler null
 
             ApplicationManager.getApplication().invokeLater {
+                frontendReady = true
                 cancelPendingTrackpadScroll()
                 pushDocumentToFrontend()
             }
@@ -449,8 +485,35 @@ class ExcalidrawFileEditor(
             if (!isTrustedFrontend()) return@addHandler null
 
             runOnEdt {
-                cancelPendingFrontendScene()
+                flushPendingFrontendScene(saveAfterUpdate = false)
                 saveDocument()
+            }
+            null
+        }
+
+        sceneDirtyQuery.addHandler { payload ->
+            if (!isTrustedFrontend()) return@addHandler null
+            runOnEdt {
+                if (payload.substringBefore('\n').toLongOrNull() == documentRevision) {
+                    frontendDirty = payload.substringAfter('\n', "1") != "0"
+                    closeAllowed = false
+                    propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
+                }
+            }
+            null
+        }
+
+        saveFinishedQuery.addHandler { payload ->
+            if (!isTrustedFrontend()) return@addHandler null
+            runOnEdt {
+                val requestId = payload.substringBefore('\n')
+                val error = payload.substringAfter('\n', "").ifBlank { saveFailure.orEmpty() }
+                val future = saveRequests.remove(requestId)
+                if (error.isBlank()) future?.complete(Unit)
+                else {
+                    reportSaveError(error)
+                    future?.completeExceptionally(IOException(error))
+                }
             }
             null
         }
@@ -553,19 +616,99 @@ class ExcalidrawFileEditor(
     }
 
     private fun setupDocumentListener() {
-        document.addDocumentListener(
+        document?.addDocumentListener(
             object : DocumentListener {
                 override fun documentChanged(event: DocumentEvent) {
                     propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
                     if (applyingFrontendScene) return
 
                     documentRevision++
+                    frontendDirty = false
                     cancelPendingFrontendScene()
                     pushDocumentToFrontend()
                 }
             },
             this,
         )
+
+        if (binaryDocument != null) {
+            ApplicationManager.getApplication().messageBus.connect(this).subscribe(
+                VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
+                    override fun after(events: List<VFileEvent>) {
+                        if (disposed || applyingFrontendScene || events.none { it is VFileContentChangeEvent && it.file == virtualFile }) return
+                        if (isModified) {
+                            reportSaveError("The PNG changed on disk while you were editing. Reopen it to load the external changes.")
+                            return
+                        }
+                        binaryDocument.reload(virtualFile.contentsToByteArray())
+                        documentRevision++
+                        cancelPendingFrontendScene()
+                        pushDocumentToFrontend()
+                    }
+                },
+            )
+        }
+    }
+
+    private fun setupSaveListeners() {
+        ApplicationManager.getApplication().messageBus.connect(this).subscribe(
+            FileDocumentManagerListener.TOPIC, object : FileDocumentManagerListener {
+                override fun beforeAllDocumentsSaving() {
+                    runOnEdt { requestFrontendSave() }
+                }
+            },
+        )
+        val closeListener = object : VetoableProjectManagerListener {
+            override fun canClose(projectToClose: Project): Boolean = projectToClose != project || saveBeforeClose()
+        }
+        ProjectManager.getInstance().addProjectManagerListener(closeListener)
+        Disposer.register(this) { ProjectManager.getInstance().removeProjectManagerListener(closeListener) }
+    }
+
+    private fun requestFrontendSave(): CompletableFuture<Unit> {
+        if (disposed || !frontendReady || !isTrustedFrontend()) return CompletableFuture.completedFuture(Unit)
+        saveFailure = null
+        val requestId = (++nextSaveRequest).toString()
+        val future = CompletableFuture<Unit>()
+        saveRequests[requestId] = future
+        executeJavaScript("window.excalidrawPlugin?.flushAndSave(${requestId.toJavaScriptStringLiteral()});")
+        // An unresponsive renderer must not leave an unbounded list of requests.
+        future.orTimeout(30, TimeUnit.SECONDS).whenComplete { _, _ -> runOnEdt { saveRequests.remove(requestId) } }
+        return future
+    }
+
+    internal fun saveBeforeClose(): Boolean {
+        if (disposed || !frontendReady) return true
+        val failure = AtomicReference<Throwable?>()
+        try {
+            ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                Runnable {
+                    // Bridge callbacks must run inside this progress dialog's
+                    // modality. ModalityState.any() is not safe for document writes.
+                    saveModality = ProgressManager.getInstance().progressIndicator.modalityState
+                    val completed = CompletableFuture<Unit>()
+                    runOnEdt {
+                        requestFrontendSave().whenComplete { _, error ->
+                            if (error == null) completed.complete(Unit) else completed.completeExceptionally(error)
+                        }
+                    }
+                    try { completed.get(30, TimeUnit.SECONDS) } catch (error: Exception) { failure.set(error) }
+                }, "Saving Excalidraw Drawing", false, project,
+            )
+        } finally {
+            saveModality = null
+        }
+        if (failure.get() == null) {
+            closeAllowed = true
+            return true
+        }
+        val message = failure.get()?.cause?.message ?: "The drawing could not be saved before closing."
+        closeAllowed = Messages.showYesNoDialog(
+            project, "$message\n\nClose and discard unsaved changes?", "Unable to Save Drawing",
+            "Discard Changes", "Keep Editing", Messages.getWarningIcon(),
+        ) == Messages.YES
+        if (closeAllowed) cancelPendingFrontendScene()
+        return closeAllowed
     }
 
     private fun loadFrontend() {
@@ -587,6 +730,8 @@ class ExcalidrawFileEditor(
               appendSceneTransferChunk: function(payload) { ${appendSceneTransferChunkQuery.inject("payload")} },
               completeSceneTransfer: function(payload) { ${completeSceneTransferQuery.inject("payload")} },
               saveCurrentDocument: function() { ${saveCurrentDocumentQuery.inject("''")} },
+              saveFinished: function(payload) { ${saveFinishedQuery.inject("payload")} },
+              sceneDirty: function(payload) { ${sceneDirtyQuery.inject("payload")} },
               themeChanged: function(payload) { ${themeChangedQuery.inject("payload")} },
               browseLibrary: function(payload) { ${browseLibraryQuery.inject("payload")} },
               openExternalLink: function(payload) { ${openExternalLinkQuery.inject("payload")} },
@@ -599,10 +744,10 @@ class ExcalidrawFileEditor(
 
     private fun pushDocumentToFrontend() {
         if (disposed || !isTrustedFrontend()) return
-        val text = document.text
+        val text = document?.text ?: binaryDocument!!.encoded()
         val preferredTheme = ExcalidrawThemeSettings.getInstance().preferredTheme
         executeJavaScript(
-            "window.excalidrawPlugin?.loadFile(${text.toJavaScriptStringLiteral()}, ${preferredTheme.toJavaScriptStringLiteral()}, $documentRevision);",
+            "window.excalidrawPlugin?.loadFile(${text.toJavaScriptStringLiteral()}, ${preferredTheme.toJavaScriptStringLiteral()}, $documentRevision, ${format.bridgeName.toJavaScriptStringLiteral()});",
         )
     }
 
@@ -614,7 +759,7 @@ class ExcalidrawFileEditor(
     private fun queueFrontendScene(update: PendingSceneUpdate, saveImmediately: Boolean) {
         if (disposed || !isTrustedFrontend()) return
         if (update.revision != documentRevision) {
-            if (saveImmediately) saveDocument()
+            if (saveImmediately) reportSaveError("The drawing changed outside this editor. Retry saving the reloaded drawing.")
             return
         }
 
@@ -689,19 +834,24 @@ class ExcalidrawFileEditor(
     }
 
     private fun applyFrontendScene(payload: String, saveAfterUpdate: Boolean) {
-        if (payload == document.text) {
+        if (payload == (document?.text ?: binaryDocument!!.encoded())) {
             if (saveAfterUpdate) saveDocument()
             return
         }
 
-        WriteCommandAction.runWriteCommandAction(project, Runnable {
-            applyingFrontendScene = true
-            try {
-                document.setText(payload)
-            } finally {
-                applyingFrontendScene = false
-            }
-        })
+        try {
+            WriteCommandAction.runWriteCommandAction(project, Runnable {
+                applyingFrontendScene = true
+                try {
+                    if (document != null) document.setText(payload) else binaryDocument!!.update(payload)
+                } finally {
+                    applyingFrontendScene = false
+                }
+            })
+        } catch (error: Exception) {
+            reportSaveError(error.message ?: "Unable to update the drawing.")
+            return
+        }
 
         propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
 
@@ -712,16 +862,40 @@ class ExcalidrawFileEditor(
 
     private fun runOnEdt(action: () -> Unit) {
         val application = ApplicationManager.getApplication()
-        if (application.isDispatchThread) action() else application.invokeLater(action)
+        if (application.isDispatchThread) action() else application.invokeLater(action, saveModality ?: ModalityState.nonModal())
     }
 
     private fun saveDocument() {
         val save = {
-            FileDocumentManager.getInstance().saveDocument(document)
+            try {
+                if (document != null) {
+                    FileDocumentManager.getInstance().saveDocument(document)
+                    if (FileDocumentManager.getInstance().isDocumentUnsaved(document)) throw IOException("The IDE could not save this file.")
+                } else {
+                    WriteCommandAction.runWriteCommandAction(project, Runnable {
+                        applyingFrontendScene = true
+                        try {
+                            binaryDocument!!.save(virtualFile::contentsToByteArray) { virtualFile.setBinaryContent(it, -1, -1, this) }
+                        } finally {
+                            applyingFrontendScene = false
+                        }
+                    })
+                }
+                saveFailure = null
+                executeJavaScript("window.excalidrawPlugin?.saveError('');")
+            } catch (error: Exception) {
+                reportSaveError(error.message ?: "Unable to save the drawing.")
+            }
             propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
         }
         val application = ApplicationManager.getApplication()
         if (application.isDispatchThread) save() else application.invokeAndWait(save)
+    }
+
+    private fun reportSaveError(message: String) {
+        saveFailure = message
+        executeJavaScript("window.excalidrawPlugin?.saveError(${message.toJavaScriptStringLiteral()});")
+        thisLogger().warn(message)
     }
 
     private fun openLibraryBrowser(url: String) {

@@ -1,7 +1,7 @@
 {
   "name": "excalidraw-jetbrains-frontend",
   "private": true,
-  "version": "0.2.8",
+  "version": "0.3.0-dev",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -14,7 +14,8 @@
     "licenses": "node scripts/generate-third-party-notices.mjs",
     "licenses:check": "node scripts/generate-third-party-notices.mjs --check",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:images": "node scripts/test-editable-images.mjs"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "0.18.1",
@@ -38,6 +39,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "playwright": "1.63.0",
     "typescript": "7.0.2",
     "vite": "8.3.0",
     "vitest": "5.0.1"

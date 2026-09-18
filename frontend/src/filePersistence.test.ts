@@ -1,0 +1,52 @@
+import { describe, expect, it, vi } from "vitest";
+import { FilePersistence } from "./filePersistence";
+
+describe("image persistence", () => {
+  it("orders slow exports before the latest explicit save", async () => {
+    let release!: (value: string) => void;
+    const encode = vi.fn().mockImplementationOnce(() => new Promise<string>((resolve) => { release = resolve; }))
+      .mockResolvedValueOnce("second-image");
+    const publish = vi.fn();
+    const persistence = new FilePersistence(encode, publish);
+    persistence.reset(3, "png");
+    const first = persistence.persist("first-scene", false);
+    await Promise.resolve();
+    const second = persistence.persist("second-scene", true);
+    expect(encode).toHaveBeenCalledTimes(1);
+    release("first-image");
+    await Promise.all([first, second]);
+    expect(publish.mock.calls).toEqual([
+      [{ revision: 3, scene: "first-image" }, false],
+      [{ revision: 3, scene: "second-image" }, true]
+    ]);
+  });
+
+  it("rejects an old export after external reload without overwriting the new file", async () => {
+    let release!: (value: string) => void;
+    const publish = vi.fn();
+    const persistence = new FilePersistence(() => new Promise((resolve) => { release = resolve; }), publish);
+    persistence.reset(1, "svg");
+    const old = persistence.persist("old", true);
+    await Promise.resolve();
+    persistence.reset(2, "svg");
+    release("obsolete-image");
+    await expect(old).rejects.toThrow("reloaded");
+    expect(publish).not.toHaveBeenCalled();
+  });
+
+  it("retries failed exports and preserves original bytes for an unchanged file", async () => {
+    const encode = vi.fn().mockRejectedValueOnce(new Error("render failed")).mockResolvedValue("new-image");
+    const publish = vi.fn();
+    const persistence = new FilePersistence(encode, publish);
+    persistence.reset(1, "png");
+    persistence.seed("original-scene", "original-image");
+    await persistence.persist("original-scene", true);
+    expect(encode).not.toHaveBeenCalled();
+    await expect(persistence.persist("edited", true)).rejects.toThrow("render failed");
+    await persistence.persist("edited", true);
+    expect(publish.mock.calls).toEqual([
+      [{ revision: 1, scene: "original-image" }, true],
+      [{ revision: 1, scene: "new-image" }, true]
+    ]);
+  });
+});

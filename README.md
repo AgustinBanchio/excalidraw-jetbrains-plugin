@@ -52,6 +52,42 @@ does not provide the general language module used by the file type integration;
 remote-development hosts and JetBrains Client are listed separately by
 Marketplace.
 
+## Editable SVG and PNG drawings
+
+Open a file ending in `.excalidraw.svg` or `.excalidraw.png` to edit its embedded
+Excalidraw scene. Save, Save All, and IDE autosave update both the rendered image
+and its editable data in that same file. No companion JSON file or manual export
+is needed:
+
+```markdown
+![Architecture](./architecture.excalidraw.svg)
+```
+
+Use **New → Excalidraw SVG Drawing** or **New → Excalidraw PNG Drawing** to create
+a drawing. New files start empty and become valid images on their first save.
+You can also rename a closed `.excalidraw` JSON drawing to either image extension,
+then open and save it to convert it. Ordinary images without embedded scene data
+cannot be edited as Excalidraw shapes; opening an invalid drawing does not overwrite it.
+
+SVG/PNG export preserves the drawing's export background, dark-mode and PNG scale
+settings. The IDE's display theme does not select the exported image's theme.
+Image rendering finishes before a tab or project closes; if saving fails, the
+editor offers to keep editing or explicitly discard the changes.
+
+The [VS Code examples](samples/vscode/README.md) include both formats and a Markdown
+preview. Copy them before testing. After saving an edit, reopen the file and refresh
+the Markdown preview to check both representations. PNG has binary Git diffs;
+SVG is text, although its embedded scene is encoded.
+
+Browser tests exercise the actual Excalidraw renderer and editor using these files:
+
+```bash
+cd frontend
+npm ci
+npx playwright install chromium
+npm run test:images
+```
+
 ## Current Stack
 
 - Kotlin `2.4.20`, compiled with JDK 25 to Java 21 bytecode.
@@ -81,9 +117,10 @@ vulnerabilities.
    bundled origin.
 5. The resource handler adapts at runtime to the JCEF API provided by the
    installed IDE, including upcoming platform versions.
-6. Kotlin sends the initial IDE document JSON to the React app.
-7. React renders Excalidraw and sends debounced scene changes back to Kotlin.
-8. Kotlin updates the IDE document; explicit save commands persist it to disk.
+6. Kotlin sends the drawing contents and format to the React app.
+7. React imports the JSON or embedded scene and sends debounced changes back to Kotlin.
+8. JSON and SVG use IDE text documents. PNG uses a binary buffer and VFS writes.
+   Image exports always embed scene data, and save/close hooks await the latest export.
 
 The frontend is built during Gradle resource processing and bundled inside the
 plugin ZIP. Generated `frontend/dist` files are not committed.
@@ -359,7 +396,7 @@ documentation for the current Marketplace process.
 
 Included:
 
-- `.excalidraw` file type registration.
+- `.excalidraw` file type registration and editing of `.excalidraw.svg` / `.excalidraw.png` images.
 - New drawing and scratch file creation.
 - JCEF-backed custom file editor.
 - Bundled current Excalidraw React frontend.

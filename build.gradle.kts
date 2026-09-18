@@ -41,7 +41,7 @@ plugins {
 }
 
 group = "com.agustinbanchio"
-version = "0.2.11"
+version = "0.3.0-dev"
 
 val platformVersion = providers.gradleProperty("platformVersion")
 val platformProduct = providers.gradleProperty("platformProduct").orElse("idea")
