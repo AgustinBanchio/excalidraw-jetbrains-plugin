@@ -36,7 +36,7 @@ abstract class VerifySyncedDirectories : DefaultTask() {
 }
 
 plugins {
-    kotlin("jvm") version "2.4.10"
+    kotlin("jvm") version "2.4.20"
     id("org.jetbrains.intellij.platform")
 }
 
@@ -62,9 +62,9 @@ dependencies {
             "webstorm" -> webstorm(platformVersion)
             else -> error("Unsupported platformProduct: ${platformProduct.get()}")
         }
-        // JCEF becomes a separately bundled plugin in 2026.2.
+        // JCEF becomes a separately bundled module in 2026.2.
         if (platformVersion.get().startsWith("2026.2")) {
-            bundledPlugin("intellij.platform.ui.jcef")
+            bundledModule("intellij.platform.ui.jcef")
         }
         pluginVerifier()
     }

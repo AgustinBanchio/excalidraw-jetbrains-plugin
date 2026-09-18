@@ -54,14 +54,14 @@ Marketplace.
 
 ## Current Stack
 
-- Kotlin `2.4.10`, compiled with JDK 25 to Java 21 bytecode.
-- Gradle `9.6.1`.
-- IntelliJ Platform Gradle Plugin `2.18.1`.
-- IntelliJ IDEA `2026.1.4` as the default development platform.
+- Kotlin `2.4.20`, compiled with JDK 25 to Java 21 bytecode.
+- Gradle `9.7.1`.
+- IntelliJ Platform Gradle Plugin `2.19.0`.
+- IntelliJ IDEA `2026.2.3` as the default development platform.
 - JCEF for the embedded web editor.
 - Excalidraw `0.18.1`.
-- React `19.2.8`.
-- Vite `8.2.0` and Vitest `4.1.10`.
+- React `19.3.0`.
+- Vite `8.3.0` and Vitest `5.0.1`.
 - TypeScript `7.0.2`.
 - MIT license.
 
@@ -96,7 +96,7 @@ instead of allowing external font fetches.
 ## Requirements
 
 - JDK or JetBrains Runtime 25.
-- Node.js `20.19+`, `22.12+`, or a newer supported Node.js release.
+- Node.js `22.12+` (22.x), `24.x`, or `26+`.
 - npm.
 - The Gradle wrapper included in this repository.
 

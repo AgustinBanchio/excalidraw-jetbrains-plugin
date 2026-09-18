@@ -84,8 +84,8 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `@types/d3-zoom@3.0.8` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3@7.4.3` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/geojson@7946.0.16` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
-| `@types/react-dom@19.2.4` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
-| `@types/react@19.2.18` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| `@types/react-dom@19.3.0` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| `@types/react@19.3.0` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/trusted-types@2.0.7` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@upsetjs/venn.js@2.0.0` | MIT | [N14](#n14) | https://github.com/upsetjs/venn.js |
 | `anymatch@3.1.3` | ISC | [N15](#n15) | https://github.com/micromatch/anymatch |
@@ -146,7 +146,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `dayjs@1.11.21` | MIT | [N48](#n48) | https://github.com/iamkun/dayjs |
 | `delaunator@5.1.0` | ISC | [N49](#n49) | https://github.com/mapbox/delaunator |
 | `detect-node-es@1.1.0` | MIT | [N50](#n50) | https://github.com/thekashey/detect-node |
-| `dompurify@3.4.14` | (MPL-2.0 OR Apache-2.0) | [N51](#n51) | https://github.com/cure53/DOMPurify |
+| `dompurify@3.4.15` | (MPL-2.0 OR Apache-2.0) | [N51](#n51) | https://github.com/cure53/DOMPurify |
 | `es-toolkit@1.47.0` | MIT | [N52](#n52) | https://github.com/toss/es-toolkit |
 | `es6-promise-pool@2.5.0` | MIT | [N53](#n53) | timdp/es6-promise-pool |
 | `fastdom@1.0.12` | MIT | [N54](#n54) | https://github.com/wilsonpage/fastdom |
@@ -180,9 +180,9 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `lodash.debounce@4.0.8` | MIT | [N78](#n78) | lodash/lodash |
 | `lodash.throttle@4.1.1` | MIT | [N78](#n78) | lodash/lodash |
 | `marked@16.4.2` | MIT | [N79](#n79) | https://github.com/markedjs/marked |
-| `mermaid@11.17.0` | MIT | [N80](#n80) | https://github.com/mermaid-js/mermaid |
+| `mermaid@11.17.2` | MIT | [N80](#n80) | https://github.com/mermaid-js/mermaid |
 | `multimath@2.0.0` | MIT | [N81](#n81) | nodeca/multimath |
-| `nanoid@3.3.18` | MIT | [N82](#n82) | ai/nanoid |
+| `nanoid@3.3.19` | MIT | [N82](#n82) | ai/nanoid |
 | `nanoid@5.1.16` | MIT | [N83](#n83) | ai/nanoid |
 | `normalize-path@3.0.0` | MIT | [N84](#n84) | jonschlinkert/normalize-path |
 | `object-assign@4.1.1` | MIT | [N85](#n85) | sindresorhus/object-assign |
@@ -201,11 +201,11 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `points-on-curve@1.0.1` | MIT | [N89](#n89) | https://github.com/pshihn/bezier-points |
 | `points-on-path@0.2.1` | MIT | [N95](#n95) | https://github.com/pshihn/points-on-path |
 | `pwacompat@2.0.17` | Apache-2.0 | [N96](#n96) | https://github.com/GoogleChrome/pwacompat |
-| `react-dom@19.2.8` | MIT | [N97](#n97) | https://github.com/react/react |
+| `react-dom@19.3.0` | MIT | [N97](#n97) | https://github.com/react/react |
 | `react-remove-scroll-bar@2.3.8` | MIT | [N16](#n16) | https://github.com/theKashey/react-remove-scroll-bar |
 | `react-remove-scroll@2.7.2` | MIT | [N16](#n16) | https://github.com/theKashey/react-remove-scroll |
 | `react-style-singleton@2.2.3` | MIT | [N16](#n16) | https://github.com/theKashey/react-style-singleton |
-| `react@19.2.8` | MIT | [N97](#n97) | https://github.com/react/react |
+| `react@19.3.0` | MIT | [N97](#n97) | https://github.com/react/react |
 | `readdirp@3.6.0` | MIT | [N98](#n98) | https://github.com/paulmillr/readdirp |
 | `robust-predicates@3.0.3` | Unlicense | [N99](#n99) | https://github.com/mourner/robust-predicates |
 | `roughjs@4.6.4` | MIT | [N100](#n100) | https://github.com/pshihn/rough |
@@ -213,14 +213,14 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `rw@1.3.3` | BSD-3-Clause | [N101](#n101) | http://github.com/mbostock/rw |
 | `safer-buffer@2.1.2` | MIT | [N102](#n102) | https://github.com/ChALkeR/safer-buffer |
 | `sass@1.51.0` | MIT | [N103](#n103) | https://github.com/sass/dart-sass |
-| `scheduler@0.27.0` | MIT | [N97](#n97) | https://github.com/facebook/react |
+| `scheduler@0.28.0` | MIT | [N97](#n97) | https://github.com/react/react |
 | `shebang-command@2.0.0` | MIT | [N104](#n104) | kevva/shebang-command |
 | `shebang-regex@3.0.0` | MIT | [N90](#n90) | sindresorhus/shebang-regex |
 | `sliced@1.0.1` | MIT | [N105](#n105) | https://github.com/aheckmann/sliced |
 | `source-map-js@1.2.1` | BSD-3-Clause | [N106](#n106) | 7rulnik/source-map-js |
 | `strictdom@1.0.1` | MIT | [N107](#n107) | https://github.com/wilsonpage/strictdom |
 | `stylis@4.4.0` | MIT | [N108](#n108) | https://github.com/thysultan/stylis.js |
-| `tinyexec@1.2.3` | MIT | [N109](#n109) | https://github.com/tinylibs/tinyexec |
+| `tinyexec@1.3.0` | MIT | [N109](#n109) | https://github.com/tinylibs/tinyexec |
 | `to-regex-range@5.0.1` | MIT | [N110](#n110) | micromatch/to-regex-range |
 | `ts-dedent@2.2.0` | MIT | [N111](#n111) | https://github.com/tamino-martinius/node-ts-dedent |
 | `tslib@2.8.1` | 0BSD | [N112](#n112) | https://github.com/Microsoft/tslib |
