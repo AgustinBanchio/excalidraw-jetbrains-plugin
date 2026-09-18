@@ -9,6 +9,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.ui.InputValidator
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.vfs.VirtualFile
 
 abstract class ExcalidrawNewImageAction(private val extension: String) : DumbAwareAction() {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
@@ -37,11 +38,13 @@ abstract class ExcalidrawNewImageAction(private val extension: String) : DumbAwa
             return
         }
         try {
+            lateinit var file: VirtualFile
             WriteCommandAction.runWriteCommandAction(project, Runnable {
-                val file = directory.createChildData(this, fileName)
-                // Empty image files open as a blank scene, as in the VS Code extension.
-                FileEditorManager.getInstance(project).openFile(file, true)
+                file = directory.createChildData(this, fileName)
             })
+            // Opening an editor can initialize JCEF and must happen outside the write action.
+            // Empty image files open as a blank scene, as in the VS Code extension.
+            FileEditorManager.getInstance(project).openFile(file, true)
         } catch (error: Exception) {
             Messages.showErrorDialog(project, error.message ?: "Unable to create the drawing.", "Cannot Create Drawing")
         }

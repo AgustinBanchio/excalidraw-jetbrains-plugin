@@ -1,19 +1,20 @@
 # Excalidraw Editor for JetBrains IDEs
 
 An unofficial, free, open-source JetBrains IDE plugin for opening and editing
-`.excalidraw` drawings without leaving the IDE.
+`.excalidraw`, `.excalidraw.svg`, and `.excalidraw.png` drawings without leaving the IDE.
 
 The plugin registers the `.excalidraw` file type and opens drawings in a custom
 JCEF-backed editor tab. It bundles the official Excalidraw React component,
-loads drawing JSON from the IDE document, and sends canvas changes back to the
-document so they participate in normal IDE save behavior and version control.
+loads drawing JSON or an image's embedded scene, and saves canvas changes through
+the IDE. SVG/PNG drawings remain displayable images with editable scene data.
 
 This repository is a modern Kotlin implementation built with the IntelliJ
 Platform Gradle Plugin 2.x. It is not a fork of an older Excalidraw plugin.
 
 ## Features
 
-- Open and edit `.excalidraw` files in a dedicated IDE editor tab.
+- Open and edit `.excalidraw`, `.excalidraw.svg`, and `.excalidraw.png` files.
+- Include editable SVG/PNG drawings directly in Markdown; saving updates the image.
 - Create Excalidraw drawings from the IDE's New menu.
 - Create initialized Excalidraw scratch files.
 - Use the familiar Excalidraw canvas and drawing tools.
@@ -69,8 +70,9 @@ You can also rename a closed `.excalidraw` JSON drawing to either image extensio
 then open and save it to convert it. Ordinary images without embedded scene data
 cannot be edited as Excalidraw shapes; opening an invalid drawing does not overwrite it.
 
-SVG/PNG export preserves the drawing's export background, dark-mode and PNG scale
-settings. The IDE's display theme does not select the exported image's theme.
+Automatic image saves use a light rendering with the scene background included;
+PNG uses 1× scale. The IDE's display theme does not select the image's theme.
+The Excalidraw export dialog remains available for manual exports with other options.
 Image rendering finishes before a tab or project closes; if saving fails, the
 editor offers to keep editing or explicitly discard the changes.
 
