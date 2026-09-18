@@ -54,7 +54,7 @@ Marketplace.
 
 ## Current Stack
 
-- Kotlin `2.4.20`, compiled with JDK 25 to Java 21 bytecode.
+- Kotlin `2.4.20`, compiled with JetBrains Runtime 25 (with JCEF) to Java 21 bytecode.
 - Gradle `9.7.1`.
 - IntelliJ Platform Gradle Plugin `2.19.0`.
 - IntelliJ IDEA `2026.2.3` as the default development platform.
@@ -95,7 +95,8 @@ instead of allowing external font fetches.
 
 ## Requirements
 
-- JDK or JetBrains Runtime 25.
+- JDK 25 to run Gradle. Compilation uses JetBrains Runtime 25 with JCEF;
+  Gradle downloads this toolchain automatically if it is not installed.
 - Node.js `22.12+` (22.x), `24.x`, or `26+`.
 - npm.
 - The Gradle wrapper included in this repository.

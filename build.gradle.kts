@@ -71,7 +71,11 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(25)
+    jvmToolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+        // org.cef classes are supplied by JBR's JCEF module, not a standard JDK.
+        vendor = JvmVendorSpec.JETBRAINS
+    }
     compilerOptions {
         jvmTarget = JvmTarget.JVM_21
     }
