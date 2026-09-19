@@ -1,6 +1,7 @@
 package com.agustinbanchio.excalidraw.editor
 
 import com.agustinbanchio.excalidraw.file.ExcalidrawFileType
+import com.agustinbanchio.excalidraw.file.DrawingFormat
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.FileEditorProvider
@@ -11,7 +12,7 @@ import com.intellij.ui.jcef.JBCefApp
 
 class ExcalidrawFileEditorProvider : FileEditorProvider, DumbAware {
     override fun accept(project: Project, file: VirtualFile): Boolean =
-        file.fileType == ExcalidrawFileType && JBCefApp.isSupported()
+        (file.fileType == ExcalidrawFileType || DrawingFormat.fromName(file.name) != null) && JBCefApp.isSupported()
 
     override fun createEditor(project: Project, file: VirtualFile): FileEditor =
         ExcalidrawFileEditor(project, file)

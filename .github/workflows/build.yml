@@ -39,5 +39,11 @@ jobs:
         working-directory: frontend
         run: npm test
 
+      - name: Test editable SVG and PNG files in Chromium
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:images
+
       - name: Build and verify plugin
-        run: ./gradlew buildPlugin verifyPlugin
+        run: ./gradlew check buildPlugin verifyPlugin

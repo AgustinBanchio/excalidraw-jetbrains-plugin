@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import { Excalidraw, serializeAsJSON, useHandleLibrary } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { EditorDocumentState, type SceneUpdate } from "./documentState";
+import { decodeDrawing, encodeDrawing, type DrawingFormat } from "./fileCodec";
+import { FilePersistence } from "./filePersistence";
 import {
   nativeMagnificationUpdate,
   type NativeMagnificationGesture
@@ -12,7 +14,6 @@ import {
   EMPTY_SCENE,
   getTheme,
   normalizePersistedImageStatuses,
-  parseScene,
   sanitizeAppState,
   type Scene,
   type Theme
@@ -26,6 +27,8 @@ type Bridge = {
   appendSceneTransferChunk: (payload: string) => void;
   completeSceneTransfer: (payload: string) => void;
   saveCurrentDocument: () => void;
+  saveFinished: (payload: string) => void;
+  sceneDirty: (payload: string) => void;
   themeChanged: (payload: Theme) => void;
   browseLibrary: (url: string) => void;
   openExternalLink: (url: string) => void;
@@ -36,7 +39,9 @@ declare global {
   interface Window {
     intellijExcalidraw?: Bridge;
     excalidrawPlugin?: {
-      loadFile: (contents: string, preferredTheme: Theme, revision: number) => void;
+      loadFile: (contents: string, preferredTheme: Theme, revision: number, format?: DrawingFormat) => Promise<void>;
+      flushAndSave: (requestId?: string) => Promise<void>;
+      saveError: (message: string) => void;
       beginMagnification: (viewportX: number, viewportY: number) => void;
       magnify: (scale: number) => void;
       endMagnification: () => void;
@@ -229,6 +234,7 @@ function App() {
   const [initialData, setInitialData] = React.useState<Scene>(EMPTY_SCENE);
   const [excalidrawApi, setExcalidrawApi] = React.useState<any>(null);
   const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
   const api = React.useRef<any>(null);
   const documentState = React.useRef(new EditorDocumentState());
   const lastSerialized = React.useRef<string>("");
@@ -237,27 +243,51 @@ function App() {
   const lastTheme = React.useRef<Theme | undefined>(undefined);
   const nativeMagnification = React.useRef<NativeMagnificationGesture | null>(null);
   const persistenceScheduler = React.useRef<ScenePersistenceScheduler | null>(null);
+  const loadGeneration = React.useRef(0);
+  const persistenceActivity = React.useRef({ pending: 0, failed: false });
+  const filePersistence = React.useRef<FilePersistence | null>(null);
+
+  if (!filePersistence.current) {
+    filePersistence.current = new FilePersistence(encodeDrawing, (update, save) => {
+      documentState.current.updateScene(update.scene);
+      transmitSceneUpdate(window.intellijExcalidraw, update, save);
+    });
+  }
+
+  const persistSnapshot = async (snapshot: SceneSnapshot, saveImmediately: boolean) => {
+    const serialized = serializeScene(snapshot.elements, snapshot.appState, snapshot.files);
+    const update = documentState.current.currentUpdate();
+    if (!update) return;
+    const activity = persistenceActivity.current;
+    activity.pending++;
+    if (serialized !== lastSerialized.current) window.intellijExcalidraw?.sceneDirty(`${update.revision}\n1`);
+    try {
+      await filePersistence.current!.persist(serialized, saveImmediately);
+      activity.failed = false;
+      if (activity === persistenceActivity.current) {
+        lastSerialized.current = serialized;
+        setSaveError(null);
+      }
+    } catch (error) {
+      activity.failed = true;
+      throw error;
+    } finally {
+      activity.pending--;
+      // An older export finishing must not mark a newer pending edit as clean.
+      if (activity === persistenceActivity.current && activity.pending === 0 && !activity.failed) {
+        window.intellijExcalidraw?.sceneDirty(`${update.revision}\n0`);
+      }
+    }
+  };
 
   if (!persistenceScheduler.current) {
     persistenceScheduler.current = new ScenePersistenceScheduler(
       SCENE_PERSISTENCE_DELAY_MS,
       (snapshot: SceneSnapshot, saveImmediately: boolean) => {
-        const serialized = serializeScene(snapshot.elements, snapshot.appState, snapshot.files);
-        const changed = serialized !== lastSerialized.current;
-
-        if (changed) {
-          lastSerialized.current = serialized;
-          documentState.current.updateScene(serialized);
-        }
-
-        if (changed || saveImmediately) {
-          const update = documentState.current.currentUpdate();
-          if (update) {
-            transmitSceneUpdate(window.intellijExcalidraw, update, saveImmediately);
-          } else if (saveImmediately) {
-            window.intellijExcalidraw?.saveCurrentDocument();
-          }
-        }
+        const generation = loadGeneration.current;
+        void persistSnapshot(snapshot, saveImmediately).catch((error) => {
+          if (generation === loadGeneration.current) setSaveError(String(error.message ?? error));
+        });
       }
     );
   }
@@ -269,7 +299,10 @@ function App() {
 
   React.useEffect(() => {
     window.excalidrawPlugin = {
-      loadFile(contents: string, preferredTheme: Theme, revision: number) {
+      async loadFile(contents: string, preferredTheme: Theme, revision: number, format: DrawingFormat = "json") {
+        const generation = ++loadGeneration.current;
+        persistenceActivity.current = { pending: 0, failed: false };
+        filePersistence.current!.reset(revision, format);
         window.clearTimeout(loadingTimer.current);
         persistenceScheduler.current?.cancel();
         loadingScene.current = true;
@@ -277,7 +310,8 @@ function App() {
         documentState.current.beginLoad(revision);
 
         try {
-          const scene = parseScene(contents, preferredTheme);
+          const scene = await decodeDrawing(contents, format, preferredTheme);
+          if (generation !== loadGeneration.current) return;
           const nextData = {
             elements: scene.elements,
             appState: scene.appState,
@@ -286,6 +320,7 @@ function App() {
 
           setInitialData(nextData);
           setLoadError(null);
+          setSaveError(null);
           api.current?.updateScene({
             elements: nextData.elements,
             appState: nextData.appState
@@ -301,14 +336,41 @@ function App() {
                 api.current.getAppState(),
                 api.current.getFiles()
               );
+              // Preserve unedited image bytes. Empty/renamed JSON images are
+              // intentionally encoded on their first save.
+              const isImage = format === "svg" ? contents.trimStart().startsWith("<") : contents.startsWith("iVBOR");
+              if (format === "json" || isImage) {
+                filePersistence.current!.seed(lastSerialized.current, contents);
+              }
             }
             loadingScene.current = false;
           }, 100);
         } catch (error) {
+          if (generation !== loadGeneration.current) return;
           loadingScene.current = false;
           setLoadError(error instanceof Error ? error.message : "The drawing could not be loaded.");
-          console.error("Failed to load .excalidraw file", error);
+          console.error("Failed to load drawing", error);
         }
+      },
+      async flushAndSave(requestId = "") {
+        try {
+          persistenceScheduler.current?.cancel();
+          if (!loadingScene.current && api.current && documentState.current.currentUpdate()) {
+            await persistSnapshot({
+              elements: api.current.getSceneElements(),
+              appState: api.current.getAppState(),
+              files: api.current.getFiles()
+            }, true);
+          }
+          window.intellijExcalidraw?.saveFinished(`${requestId}\n`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          setSaveError(message);
+          window.intellijExcalidraw?.saveFinished(`${requestId}\n${message}`);
+        }
+      },
+      saveError(message: string) {
+        setSaveError(message || null);
       },
       beginMagnification(viewportX: number, viewportY: number) {
         const appState = api.current?.getAppState();
@@ -381,6 +443,8 @@ function App() {
     return () => {
       window.clearTimeout(loadingTimer.current);
       persistenceScheduler.current?.cancel();
+      loadGeneration.current++;
+      filePersistence.current!.reset(0, "json");
       nativeMagnification.current = null;
       delete window.excalidrawPlugin;
     };
@@ -390,14 +454,8 @@ function App() {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        if (!persistenceScheduler.current?.flush(true)) {
-          const update = documentState.current.currentUpdate();
-          if (update) {
-            transmitSceneUpdate(window.intellijExcalidraw, update, true);
-          } else {
-            window.intellijExcalidraw?.saveCurrentDocument();
-          }
-        }
+        event.stopImmediatePropagation();
+        void window.excalidrawPlugin?.flushAndSave();
       }
     };
 
@@ -410,11 +468,11 @@ function App() {
       }
     };
 
-    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("pointerup", flushAfterPointerUp);
     document.addEventListener("visibilitychange", flushBeforeHiding);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("pointerup", flushAfterPointerUp);
       document.removeEventListener("visibilitychange", flushBeforeHiding);
     };
@@ -422,14 +480,20 @@ function App() {
 
   return (
     <div className={loadError ? "editor-shell editor-shell--error" : "editor-shell"}>
+      {saveError && !loadError && (
+        <div className="save-error" role="alert">
+          Unable to save: {saveError} <button onClick={() => void window.excalidrawPlugin?.flushAndSave()}>Retry save</button>
+        </div>
+      )}
       {loadError ? (
         <div className="load-error" role="alert">
           <h1>Unable to open this drawing</h1>
           <p>{loadError}</p>
-          <p>The file has not been changed. Fix its JSON content and reopen it.</p>
+          <p>The file has not been changed. Check its contents and reopen it.</p>
         </div>
       ) : (
         <Excalidraw
+          UIOptions={{ canvasActions: { saveToActiveFile: false } }}
           initialData={initialData as any}
           libraryReturnUrl={`${window.location.origin}${window.location.pathname}`}
           validateEmbeddable={false}

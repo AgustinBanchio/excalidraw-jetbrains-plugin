@@ -5,19 +5,21 @@
 
     <description><![CDATA[
         <p>
-            Open and edit <code>.excalidraw</code> drawings directly inside JetBrains IDEs.
+            Open and edit <code>.excalidraw</code>, <code>.excalidraw.svg</code>, and
+            <code>.excalidraw.png</code> drawings directly inside JetBrains IDEs.
         </p>
 
         <p>
             Excalidraw Editor adds a full embedded Excalidraw canvas to IntelliJ IDEA,
             WebStorm, PyCharm, GoLand, and other compatible JetBrains IDEs. Drawings
-            remain ordinary <code>.excalidraw</code> JSON files in your project, ready to
-            commit, review, and share with the rest of your codebase.
+            can be saved as JSON or as SVG/PNG images with embedded editable scene data,
+            ready to commit and include directly in Markdown documentation.
         </p>
 
         <h3>Features</h3>
         <ul>
-            <li>Open and edit <code>.excalidraw</code> files in a dedicated editor tab.</li>
+            <li>Open and edit Excalidraw JSON files and SVG/PNG images with embedded scene data.</li>
+            <li>Update the rendered image and its editable scene together when saving SVG/PNG drawings.</li>
             <li>Create new Excalidraw drawings and scratch files directly from the IDE.</li>
             <li>Use the familiar Excalidraw drawing tools without leaving the IDE.</li>
             <li>Load drawings created by Excalidraw and other compatible editors.</li>
@@ -42,6 +44,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>0.3.0-dev</h3>
+        <ul>
+            <li>Open, edit, and save <code>.excalidraw.svg</code> and <code>.excalidraw.png</code> files, including drawings created in VS Code.</li>
+            <li>Keep rendered images and embedded scene data together for Markdown documentation.</li>
+            <li>Create SVG and PNG drawings from the New menu.</li>
+        </ul>
         <h3>0.2.11 - 2026-08-21</h3>
         <ul>
             <li>Improved macOS trackpad panning with responsive, frame-coalesced scrolling that follows the system scroll-direction preference.</li>
@@ -67,7 +75,8 @@
             fieldName="INSTANCE"
             extensions="excalidraw"/>
 
-        <fileEditorProvider implementation="com.agustinbanchio.excalidraw.editor.ExcalidrawFileEditorProvider"/>
+        <fileEditorProvider implementation="com.agustinbanchio.excalidraw.editor.ExcalidrawFileEditorProvider" order="first"/>
+        <virtualFilePreCloseCheck implementation="com.agustinbanchio.excalidraw.editor.ExcalidrawSaveGuard"/>
 
         <applicationConfigurable
             id="com.agustinbanchio.excalidraw.settings"
@@ -85,6 +94,16 @@
     </extensions>
 
     <actions>
+        <action id="com.agustinbanchio.excalidraw.NewSvgFile"
+                class="com.agustinbanchio.excalidraw.actions.ExcalidrawNewSvgAction"
+                text="Excalidraw SVG Drawing" description="Create an editable SVG drawing" icon="/icons/excalidraw.svg">
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="com.agustinbanchio.excalidraw.NewFile"/>
+        </action>
+        <action id="com.agustinbanchio.excalidraw.NewPngFile"
+                class="com.agustinbanchio.excalidraw.actions.ExcalidrawNewPngAction"
+                text="Excalidraw PNG Drawing" description="Create an editable PNG drawing" icon="/icons/excalidraw.svg">
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="com.agustinbanchio.excalidraw.NewSvgFile"/>
+        </action>
         <action
             id="com.agustinbanchio.excalidraw.NewFile"
             class="com.agustinbanchio.excalidraw.actions.ExcalidrawNewFileAction"
