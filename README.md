@@ -56,8 +56,9 @@ Marketplace.
 ## Editable SVG and PNG drawings
 
 Open a file ending in `.excalidraw.svg` or `.excalidraw.png` to edit its embedded
-Excalidraw scene. Save, Save All, and IDE autosave update both the rendered image
-and its editable data in that same file. No companion JSON file or manual export
+Excalidraw scene. Edits automatically save both the rendered image and its editable
+data in that same file after a short debounce. Save and Save All also flush pending
+edits immediately. No companion JSON file or manual export
 is needed:
 
 ```markdown

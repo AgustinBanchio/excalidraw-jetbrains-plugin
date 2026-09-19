@@ -38,7 +38,9 @@ export class FilePersistence {
       const changed = json !== this.lastJson;
       const contents = changed ? await this.encode(json, format) : this.lastContents;
       if (generation !== this.generation) throw new Error("The drawing was reloaded before saving completed.");
-      if (changed || save) this.publish({ revision, scene: contents }, save);
+      // Image files must stay usable by Markdown previews and external viewers
+      // after ordinary edits, without waiting for an IDE-wide save event.
+      if (changed || save) this.publish({ revision, scene: contents }, save || (changed && format !== "json"));
       this.lastJson = json;
       this.lastContents = contents;
     });

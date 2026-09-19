@@ -66,7 +66,7 @@ try {
     assert.ok(result.changed && result.width > 0 && result.height > 0);
     console.log(`${format}: upstream example loads, edits, renders and reopens (${result.count} elements, ${result.fileIds.length} embedded assets).`);
 
-    // Exercise the real React editor and bridge, including unchanged saves and Ctrl+S.
+    // Exercise the real editor: unchanged saves, automatic image saves, and Ctrl+S.
     await page.evaluate(async ({ contents, format }) => {
       await window.excalidrawPlugin.loadFile(contents, "light", format === "svg" ? 10 : 20, format);
     }, { contents, format });
@@ -79,7 +79,6 @@ try {
     await page.mouse.down();
     await page.mouse.move(600, 490, { steps: 4 });
     await page.mouse.up();
-    await page.keyboard.press("Control+s");
     await page.waitForFunction(({ old, revision }) => window.testBridge.updates.some((update) => update.revision === revision && update.save === "1" && update.content !== old), { old: contents, revision: format === "svg" ? 10 : 20 });
     const saved = await page.evaluate(async ({ format, contents }) => {
       const { decodeDrawing } = await import("/src/fileCodec.ts");
@@ -90,7 +89,24 @@ try {
       return { oldCount: old.elements.length, newCount: scene.elements.length };
     }, { format, contents });
     assert.equal(saved.newCount, saved.oldCount + 1);
-    console.log(`${format}: editor drawing and immediate Ctrl+S save the latest shape.`);
+    console.log(`${format}: drawing a shape automatically saves the updated image without Ctrl+S.`);
+
+    // A second edit followed immediately by Ctrl+S must still include the latest shape.
+    await page.getByTitle(/Rectangle/).click();
+    await page.mouse.move(650, 420);
+    await page.mouse.down();
+    await page.mouse.move(750, 490, { steps: 4 });
+    await page.mouse.up();
+    await page.evaluate(() => { window.testBridge.saves = []; });
+    await page.keyboard.press("Control+s");
+    await page.waitForFunction(() => window.testBridge.saves.length > 0);
+    const explicitSaveCount = await page.evaluate(async (format) => {
+      const { decodeDrawing } = await import("/src/fileCodec.ts");
+      const update = window.testBridge.updates.filter((item) => item.save === "1").at(-1);
+      return (await decodeDrawing(update.content, format, "light")).elements.length;
+    }, format);
+    assert.equal(explicitSaveCount, saved.oldCount + 2);
+    console.log(`${format}: immediate Ctrl+S also saves the latest shape.`);
   }
 
   const edgeCases = await page.evaluate(async () => {
