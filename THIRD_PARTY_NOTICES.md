@@ -10,7 +10,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
 | Package | License | Notice | Source |
 | --- | --- | --- | --- |
-| `@antfu/install-pkg@1.1.0` | MIT | [N1](#n1) | https://github.com/antfu/install-pkg |
+| `@antfu/install-pkg@2.1.0` | MIT | [N1](#n1) | https://github.com/antfu-collective/install-pkg |
 | `@braintree/sanitize-url@6.0.2` | MIT | [N2](#n2) | https://github.com/braintree/sanitize-url |
 | `@braintree/sanitize-url@7.1.2` | MIT | [N2](#n2) | https://github.com/braintree/sanitize-url |
 | `@chevrotain/types@11.1.2` | Apache-2.0 | [N3](#n3) | https://github.com/Chevrotain/chevrotain |
@@ -24,33 +24,33 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `@floating-ui/react-dom@2.1.9` | MIT | [N8](#n8) | https://github.com/floating-ui/floating-ui |
 | `@floating-ui/utils@0.2.12` | MIT | [N8](#n8) | https://github.com/floating-ui/floating-ui |
 | `@iconify/types@2.0.0` | MIT | [N9](#n9) | https://github.com/iconify/iconify |
-| `@iconify/utils@3.1.3` | MIT | [N10](#n10) | https://github.com/iconify/iconify |
+| `@iconify/utils@3.1.7` | MIT | [N10](#n10) | https://github.com/iconify/iconify |
 | `@mermaid-js/parser@1.2.1` | MIT | [N11](#n11) | https://github.com/mermaid-js/mermaid |
-| `@radix-ui/primitive@1.1.7` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-arrow@1.1.15` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-collection@1.1.15` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/primitive@1.2.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-arrow@1.1.17` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-collection@1.2.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/react-compose-refs@1.1.5` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-context@1.2.2` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-direction@1.1.4` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-dismissable-layer@1.1.19` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-focus-guards@1.1.6` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-focus-scope@1.1.16` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-context@1.3.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-direction@1.2.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-dismissable-layer@1.2.1` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-focus-guards@1.2.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-focus-scope@1.3.1` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/react-id@1.1.4` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-popover@1.1.23` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-popper@1.3.7` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-portal@1.1.17` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-presence@1.1.10` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-primitive@2.1.10` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-roving-focus@1.1.19` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-slot@1.3.3` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-tabs@1.1.21` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-use-callback-ref@1.1.4` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-use-controllable-state@1.2.6` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-popover@1.3.1` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-popper@1.4.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-portal@1.2.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-presence@1.1.11` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-primitive@2.2.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-roving-focus@1.2.1` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-slot@1.5.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-tabs@1.2.1` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-use-callback-ref@1.1.5` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-use-controllable-state@1.3.0` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/react-use-effect-event@0.0.5` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/react-use-is-hydrated@0.1.3` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/react-use-layout-effect@1.1.4` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/react-use-rect@1.1.4` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
-| `@radix-ui/react-use-size@1.1.4` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
+| `@radix-ui/react-use-size@1.1.5` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@radix-ui/rect@1.1.3` | MIT | [N12](#n12) | https://github.com/radix-ui/primitives |
 | `@types/d3-array@3.2.2` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-axis@3.0.6` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
@@ -66,22 +66,22 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `@types/d3-fetch@3.0.7` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-force@3.0.10` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-format@3.0.4` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
-| `@types/d3-geo@3.1.0` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| `@types/d3-geo@3.1.1` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-hierarchy@3.1.7` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-interpolate@3.0.4` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-path@3.1.1` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-polygon@3.0.2` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-quadtree@3.0.6` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
-| `@types/d3-random@3.0.3` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| `@types/d3-random@3.0.4` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-scale-chromatic@3.1.0` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-scale@4.0.9` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
-| `@types/d3-selection@3.0.11` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
-| `@types/d3-shape@3.1.8` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| `@types/d3-selection@3.0.12` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| `@types/d3-shape@3.2.0` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-time-format@4.0.3` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-time@3.0.4` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-timer@3.0.2` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3-transition@3.0.9` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
-| `@types/d3-zoom@3.0.8` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| `@types/d3-zoom@3.0.9` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/d3@7.4.3` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/geojson@7946.0.16` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | `@types/react-dom@19.3.0` | MIT | [N13](#n13) | https://github.com/DefinitelyTyped/DefinitelyTyped |
@@ -96,8 +96,8 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `canvas-roundrect-polyfill@0.0.1` | MIT | [N19](#n19) | https://github.com/Kaiido/roundRect |
 | `chokidar@3.6.0` | MIT | [N20](#n20) | https://github.com/paulmillr/chokidar |
 | `clsx@1.1.1` | MIT | [N21](#n21) | lukeed/clsx |
+| `commander@15.0.0` | MIT | [N22](#n22) | https://github.com/tj/commander.js |
 | `commander@7.2.0` | MIT | [N22](#n22) | https://github.com/tj/commander.js |
-| `commander@8.3.0` | MIT | [N22](#n22) | https://github.com/tj/commander.js |
 | `cose-base@1.0.3` | MIT | [N23](#n23) | https://github.com/iVis-at-Bilkent/cose-base |
 | `cose-base@2.2.0` | MIT | [N23](#n23) | https://github.com/iVis-at-Bilkent/cose-base |
 | `crc-32@0.3.0` | Apache-2.0 | [N24](#n24) | https://github.com/SheetJS/js-crc32 |
@@ -106,7 +106,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `csstype@3.2.3` | MIT | [N27](#n27) | https://github.com/frenic/csstype |
 | `cytoscape-cose-bilkent@4.1.0` | MIT | [N28](#n28) | https://github.com/cytoscape/cytoscape.js-cose-bilkent |
 | `cytoscape-fcose@2.2.0` | MIT | [N29](#n29) | https://github.com/iVis-at-Bilkent/cytoscape.js-fcose |
-| `cytoscape@3.34.1` | MIT | [N30](#n30) | https://github.com/cytoscape/cytoscape.js |
+| `cytoscape@3.34.4` | MIT | [N30](#n30) | https://github.com/cytoscape/cytoscape.js |
 | `d3-array@2.12.1` | BSD-3-Clause | [N31](#n31) | https://github.com/d3/d3-array |
 | `d3-array@3.2.4` | ISC | [N32](#n32) | https://github.com/d3/d3-array |
 | `d3-axis@3.0.0` | ISC | [N33](#n33) | https://github.com/d3/d3-axis |
@@ -143,11 +143,11 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `d3-zoom@3.0.0` | ISC | [N33](#n33) | https://github.com/d3/d3-zoom |
 | `d3@7.9.0` | ISC | [N32](#n32) | https://github.com/d3/d3 |
 | `dagre-d3-es@7.0.14` | MIT | [N47](#n47) | https://github.com/tbo47/dagre-es |
-| `dayjs@1.11.21` | MIT | [N48](#n48) | https://github.com/iamkun/dayjs |
+| `dayjs@1.11.23` | MIT | [N48](#n48) | https://github.com/iamkun/dayjs |
 | `delaunator@5.1.0` | ISC | [N49](#n49) | https://github.com/mapbox/delaunator |
 | `detect-node-es@1.1.0` | MIT | [N50](#n50) | https://github.com/thekashey/detect-node |
-| `dompurify@3.4.15` | (MPL-2.0 OR Apache-2.0) | [N51](#n51) | https://github.com/cure53/DOMPurify |
-| `es-toolkit@1.47.0` | MIT | [N52](#n52) | https://github.com/toss/es-toolkit |
+| `dompurify@3.4.17` | (MPL-2.0 OR Apache-2.0) | [N51](#n51) | https://github.com/cure53/DOMPurify |
+| `es-toolkit@1.53.1` | MIT | [N52](#n52) | https://github.com/toss/es-toolkit |
 | `es6-promise-pool@2.5.0` | MIT | [N53](#n53) | timdp/es6-promise-pool |
 | `fastdom@1.0.12` | MIT | [N54](#n54) | https://github.com/wilsonpage/fastdom |
 | `fill-range@7.1.1` | MIT | [N18](#n18) | jonschlinkert/fill-range |
@@ -172,7 +172,7 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `isexe@2.0.0` | ISC | [N71](#n71) | https://github.com/isaacs/isexe |
 | `jotai-scope@0.7.2` | MIT | [N72](#n72) | https://github.com/jotaijs/jotai-scope |
 | `jotai@2.11.0` | MIT | [N73](#n73) | https://github.com/pmndrs/jotai |
-| `katex@0.16.47` | MIT | [N74](#n74) | https://github.com/KaTeX/KaTeX |
+| `katex@0.19.1` | MIT | [N74](#n74) | https://github.com/KaTeX/KaTeX |
 | `khroma@2.1.0` | MIT | [N75](#n75) | github:fabiospampinato/khroma |
 | `layout-base@1.0.2` | MIT | [N76](#n76) | https://github.com/iVis-at-Bilkent/layout-base |
 | `layout-base@2.0.1` | MIT | [N76](#n76) | https://github.com/iVis-at-Bilkent/layout-base |
@@ -182,12 +182,12 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `marked@16.4.2` | MIT | [N79](#n79) | https://github.com/markedjs/marked |
 | `mermaid@11.17.2` | MIT | [N80](#n80) | https://github.com/mermaid-js/mermaid |
 | `multimath@2.0.0` | MIT | [N81](#n81) | nodeca/multimath |
-| `nanoid@3.3.19` | MIT | [N82](#n82) | ai/nanoid |
+| `nanoid@3.3.20` | MIT | [N82](#n82) | ai/nanoid |
 | `nanoid@5.1.16` | MIT | [N83](#n83) | ai/nanoid |
 | `normalize-path@3.0.0` | MIT | [N84](#n84) | jonschlinkert/normalize-path |
 | `object-assign@4.1.1` | MIT | [N85](#n85) | sindresorhus/object-assign |
 | `open-color@1.9.1` | MIT | [N86](#n86) | https://github.com/yeun/open-color |
-| `package-manager-detector@1.6.0` | MIT | [N87](#n87) | https://github.com/antfu-collective/package-manager-detector |
+| `package-manager-detector@1.9.0` | MIT | [N87](#n87) | https://github.com/antfu-collective/package-manager-detector |
 | `pako@2.0.3` | (MIT AND Zlib) | [N88](#n88) | nodeca/pako |
 | `path-data-parser@0.1.0` | MIT | [N89](#n89) | https://github.com/pshihn/path-data-parser |
 | `path-key@3.1.1` | MIT | [N90](#n90) | sindresorhus/path-key |
@@ -201,11 +201,11 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `points-on-curve@1.0.1` | MIT | [N89](#n89) | https://github.com/pshihn/bezier-points |
 | `points-on-path@0.2.1` | MIT | [N95](#n95) | https://github.com/pshihn/points-on-path |
 | `pwacompat@2.0.17` | Apache-2.0 | [N96](#n96) | https://github.com/GoogleChrome/pwacompat |
-| `react-dom@19.3.0` | MIT | [N97](#n97) | https://github.com/react/react |
+| `react-dom@19.3.1` | MIT | [N97](#n97) | https://github.com/react/react |
 | `react-remove-scroll-bar@2.3.8` | MIT | [N16](#n16) | https://github.com/theKashey/react-remove-scroll-bar |
 | `react-remove-scroll@2.7.2` | MIT | [N16](#n16) | https://github.com/theKashey/react-remove-scroll |
 | `react-style-singleton@2.2.3` | MIT | [N16](#n16) | https://github.com/theKashey/react-style-singleton |
-| `react@19.3.0` | MIT | [N97](#n97) | https://github.com/react/react |
+| `react@19.3.1` | MIT | [N97](#n97) | https://github.com/react/react |
 | `readdirp@3.6.0` | MIT | [N98](#n98) | https://github.com/paulmillr/readdirp |
 | `robust-predicates@3.0.3` | Unlicense | [N99](#n99) | https://github.com/mourner/robust-predicates |
 | `roughjs@4.6.4` | MIT | [N100](#n100) | https://github.com/pshihn/rough |
@@ -217,18 +217,18 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 | `shebang-command@2.0.0` | MIT | [N104](#n104) | kevva/shebang-command |
 | `shebang-regex@3.0.0` | MIT | [N90](#n90) | sindresorhus/shebang-regex |
 | `sliced@1.0.1` | MIT | [N105](#n105) | https://github.com/aheckmann/sliced |
-| `source-map-js@1.2.1` | BSD-3-Clause | [N106](#n106) | 7rulnik/source-map-js |
+| `source-map-js@1.2.2` | BSD-3-Clause | [N106](#n106) | 7rulnik/source-map-js |
 | `strictdom@1.0.1` | MIT | [N107](#n107) | https://github.com/wilsonpage/strictdom |
 | `stylis@4.4.0` | MIT | [N108](#n108) | https://github.com/thysultan/stylis.js |
-| `tinyexec@1.3.0` | MIT | [N109](#n109) | https://github.com/tinylibs/tinyexec |
+| `tinyexec@1.3.1` | MIT | [N109](#n109) | https://github.com/tinylibs/tinyexec |
 | `to-regex-range@5.0.1` | MIT | [N110](#n110) | micromatch/to-regex-range |
-| `ts-dedent@2.2.0` | MIT | [N111](#n111) | https://github.com/tamino-martinius/node-ts-dedent |
-| `tslib@2.8.1` | 0BSD | [N112](#n112) | https://github.com/Microsoft/tslib |
+| `ts-dedent@2.3.0` | MIT | [N111](#n111) | https://github.com/tamino-martinius/node-ts-dedent |
+| `tslib@2.9.1` | 0BSD | [N112](#n112) | https://github.com/Microsoft/tslib |
 | `tunnel-rat@0.1.2` | MIT | [N113](#n113) | https://github.com/pmndrs/tunnel-rat |
 | `use-callback-ref@1.3.3` | MIT | [N16](#n16) | https://github.com/theKashey/use-callback-ref/ |
 | `use-sidecar@1.1.3` | MIT | [N16](#n16) | https://github.com/theKashey/use-sidecar |
-| `use-sync-external-store@1.6.0` | MIT | [N97](#n97) | https://github.com/facebook/react |
-| `uuid@14.0.0` | MIT | [N114](#n114) | https://github.com/uuidjs/uuid |
+| `use-sync-external-store@1.7.0` | MIT | [N97](#n97) | https://github.com/react/react |
+| `uuid@14.0.3` | MIT | [N114](#n114) | https://github.com/uuidjs/uuid |
 | `webworkify@1.5.0` | MIT | [N115](#n115) | https://github.com/substack/webworkify |
 | `which@2.0.2` | ISC | [N71](#n71) | https://github.com/isaacs/node-which |
 | `zustand@4.5.7` | MIT | [N116](#n116) | https://github.com/pmndrs/zustand |
@@ -2171,13 +2171,11 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
 
 ### N52
 
+    LICENSE
+
     MIT License
 
-    Copyright (c) 2024 Viva Republica, Inc
-
-    Copyright OpenJS Foundation and other contributors
-
-    Parts of the test suite and compatibility layer in `es-toolkit/compat` are derived from Lodash (https://github.com/lodash/lodash) by the OpenJS Foundation (https://openjsf.org/) and Underscore.js by Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors (http://underscorejs.org/)
+    Copyright (c) 2024 Viva Republica, Inc.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -2196,6 +2194,50 @@ Regenerate it with `npm run licenses` from the `frontend` directory.
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
+
+    ---
+
+    NOTICE
+
+    es-toolkit
+
+    Parts of the test suite and compatibility layer in es-toolkit/compat are
+    derived from Lodash (https://github.com/lodash/lodash).
+
+    Lodash copyright notice and MIT permission notice:
+
+    Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
+
+    Based on Underscore.js, copyright Jeremy Ashkenas,
+    DocumentCloud and Investigative Reporters & Editors <http://underscorejs.org/>
+
+    This software consists of voluntary contributions made by many
+    individuals. For exact contribution history, see the revision history
+    available at https://github.com/lodash/lodash
+
+    The following license applies to all parts of this software except as
+    documented below:
+
+    ====
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### N53
 

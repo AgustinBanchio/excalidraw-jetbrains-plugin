@@ -93,21 +93,27 @@ npm run test:images
 
 ## Current Stack
 
-- Kotlin `2.4.20`, compiled with JetBrains Runtime 25 (with JCEF) to Java 21 bytecode.
-- Gradle `9.7.1`.
+- Kotlin `2.4.21`, compiled with JetBrains Runtime 25 (with JCEF) to Java 21 bytecode.
+- Gradle `9.8.2`.
 - IntelliJ Platform Gradle Plugin `2.19.0`.
-- IntelliJ IDEA `2026.2.3` as the default development platform.
+- IntelliJ IDEA `2026.2.4` as the default development platform.
 - JCEF for the embedded web editor.
 - Excalidraw `0.18.1`.
-- React `19.3.0`.
-- Vite `8.3.0` and Vitest `5.0.1`.
+- React `19.3.1`.
+- Vite `8.3.5` and Vitest `5.0.5`.
 - TypeScript `7.0.2`.
 - MIT license.
 
 Frontend dependencies are pinned in `frontend/package.json` and
 `frontend/package-lock.json`. Narrow npm overrides keep Excalidraw transitive
-dependencies compatible with React 19 and free of known production
-vulnerabilities.
+dependencies compatible with React 19 and address known vulnerabilities.
+Mermaid, its parser, Nano ID, and Immutable stay on the compatible release lines
+used by Excalidraw. DOMPurify and KaTeX are pinned to patched versions.
+CI audits both production and development dependencies.
+
+The installed IDE supplies JCEF and the Java runtime. Keep the IDE and its
+bundled JetBrains Runtime updated to receive their security fixes; updating
+this plugin does not replace the host runtime.
 
 ## How It Works
 
@@ -137,7 +143,7 @@ instead of allowing external font fetches.
 
 - JDK 25 to run Gradle. Compilation uses JetBrains Runtime 25 with JCEF;
   Gradle downloads this toolchain automatically if it is not installed.
-- Node.js `22.12+` (22.x), `24.x`, or `26+`.
+- Node.js `22.12+` (22.x), `24.x`, or `26+`; CI uses `24.22.2` from `.node-version`.
 - npm.
 - The Gradle wrapper included in this repository.
 
@@ -215,7 +221,7 @@ After changing dependencies, update the lockfile and verify the frontend:
 ```bash
 cd frontend
 npm outdated
-npm audit --omit=dev
+npm audit
 npm run licenses
 npm run build
 ```
@@ -328,7 +334,7 @@ Before publishing:
 ```bash
 cd frontend
 npm outdated
-npm audit --omit=dev
+npm audit
 npm run build
 cd ..
 ./gradlew buildPlugin
@@ -359,7 +365,7 @@ For a signed release, also run `./gradlew verifyPluginSignature`.
 Expected results:
 
 - `npm outdated` produces no dependency table.
-- `npm audit --omit=dev` reports zero vulnerabilities.
+- `npm audit` reports zero vulnerabilities across production and development dependencies.
 - Frontend and plugin builds succeed.
 - Plugin Verifier reports compatibility with the configured IDE target.
 - Signature verification succeeds for the signed ZIP.
