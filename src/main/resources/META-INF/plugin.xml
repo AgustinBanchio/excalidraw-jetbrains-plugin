@@ -44,10 +44,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.2.13 - 2026-10-31</h3>
+        <h3>0.2.14 - 2026-10-31</h3>
         <ul>
-            <li>Update frontend and plugin build dependencies to incorporate current security fixes, including patched DOMPurify and KaTeX versions.</li>
-            <li>Extend dependency security audits to include development tools.</li>
+            <li>Use the supported IDE navigation API to open new SVG and PNG drawings, removing deprecated API usage.</li>
+            <li>Preserve save-before-close protection and add regression coverage for immediate closes, split editors, Close All, project shutdown, and failed saves.</li>
         </ul>
     ]]></change-notes>
 

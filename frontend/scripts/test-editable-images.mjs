@@ -107,6 +107,27 @@ try {
     }, format);
     assert.equal(explicitSaveCount, saved.oldCount + 2);
     console.log(`${format}: immediate Ctrl+S also saves the latest shape.`);
+
+    // The close guard uses this same bridge request before allowing disposal.
+    // Trigger it immediately after an edit, before a debounced export can finish.
+    await page.getByTitle(/Rectangle/).click();
+    await page.mouse.move(800, 420);
+    await page.mouse.down();
+    await page.mouse.move(900, 490, { steps: 4 });
+    await page.mouse.up();
+    const closeSave = await page.evaluate(async (format) => {
+      const { decodeDrawing } = await import("/src/fileCodec.ts");
+      window.testBridge.saves = [];
+      await window.excalidrawPlugin.flushAndSave("close");
+      const update = window.testBridge.updates.filter((item) => item.save === "1").at(-1);
+      return {
+        acknowledgement: window.testBridge.saves.at(-1),
+        count: (await decodeDrawing(update.content, format, "light")).elements.length
+      };
+    }, format);
+    assert.equal(closeSave.acknowledgement, "close\n");
+    assert.equal(closeSave.count, saved.oldCount + 3);
+    console.log(`${format}: immediate close-save acknowledges only after exporting the latest shape.`);
   }
 
   const edgeCases = await page.evaluate(async () => {

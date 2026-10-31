@@ -5,7 +5,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.ui.InputValidator
 import com.intellij.openapi.ui.Messages
@@ -44,7 +44,7 @@ abstract class ExcalidrawNewImageAction(private val extension: String) : DumbAwa
             })
             // Opening an editor can initialize JCEF and must happen outside the write action.
             // Empty image files open as a blank scene, as in the VS Code extension.
-            FileEditorManager.getInstance(project).openFile(file, true)
+            OpenFileDescriptor(project, file).navigate(true)
         } catch (error: Exception) {
             Messages.showErrorDialog(project, error.message ?: "Unable to create the drawing.", "Cannot Create Drawing")
         }

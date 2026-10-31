@@ -21,7 +21,6 @@ import com.intellij.openapi.fileEditor.FileEditorStateLevel
 import com.intellij.openapi.fileEditor.FileEditorStateLevel.FULL
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.project.VetoableProjectManagerListener
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.DialogWrapper
@@ -131,7 +130,8 @@ class ExcalidrawFileEditor(
     private var saveFailure: String? = null
     private var nextSaveRequest = 0L
     private val saveRequests = mutableMapOf<String, CompletableFuture<Unit>>()
-    private var closeAllowed = false
+    private val closeGuard = SaveBeforeClose(::awaitFrontendSaveBeforeClose, ::confirmDiscard, ::cancelPendingFrontendScene)
+    private val saveGuardEntry = ExcalidrawSaveGuard.Entry(virtualFile, ::saveBeforeClose)
     @Volatile
     private var saveModality: ModalityState? = null
     private var documentRevision = 1L
@@ -161,7 +161,7 @@ class ExcalidrawFileEditor(
         setupJsBridge()
         setupDocumentListener()
         setupSaveListeners()
-        ExcalidrawSaveGuard.editors.add(this)
+        ExcalidrawSaveGuard.editors.add(saveGuardEntry)
         loadFrontend()
     }
 
@@ -193,9 +193,9 @@ class ExcalidrawFileEditor(
     override fun dispose() {
         sceneUpdateAlarm.cancelAllRequests()
         flushPendingFrontendScene(saveAfterUpdate = true)
-        if (!closeAllowed) saveDocument()
+        if (!closeGuard.closeAllowed) saveDocument()
         disposed = true
-        ExcalidrawSaveGuard.editors.remove(this)
+        ExcalidrawSaveGuard.editors.remove(saveGuardEntry)
         saveRequests.values.forEach { it.completeExceptionally(IOException("The editor was closed.")) }
         saveRequests.clear()
         Disposer.dispose(readyQuery)
@@ -496,7 +496,7 @@ class ExcalidrawFileEditor(
             runOnEdt {
                 if (payload.substringBefore('\n').toLongOrNull() == documentRevision) {
                     frontendDirty = payload.substringAfter('\n', "1") != "0"
-                    closeAllowed = false
+                    closeGuard.markChanged()
                     propertyChangeSupport.firePropertyChange(FileEditor.getPropModified(), null, isModified)
                 }
             }
@@ -658,9 +658,7 @@ class ExcalidrawFileEditor(
                 }
             },
         )
-        val closeListener = object : VetoableProjectManagerListener {
-            override fun canClose(projectToClose: Project): Boolean = projectToClose != project || saveBeforeClose()
-        }
+        val closeListener = ExcalidrawSaveGuard.ProjectClose(project, ::saveBeforeClose)
         ProjectManager.getInstance().addProjectManagerListener(closeListener)
         Disposer.register(this) { ProjectManager.getInstance().removeProjectManagerListener(closeListener) }
     }
@@ -679,6 +677,10 @@ class ExcalidrawFileEditor(
 
     internal fun saveBeforeClose(): Boolean {
         if (disposed || !frontendReady) return true
+        return closeGuard.canClose()
+    }
+
+    private fun awaitFrontendSaveBeforeClose(): Throwable? {
         val failure = AtomicReference<Throwable?>()
         try {
             ProgressManager.getInstance().runProcessWithProgressSynchronously(
@@ -698,17 +700,15 @@ class ExcalidrawFileEditor(
         } finally {
             saveModality = null
         }
-        if (failure.get() == null) {
-            closeAllowed = true
-            return true
-        }
-        val message = failure.get()?.cause?.message ?: "The drawing could not be saved before closing."
-        closeAllowed = Messages.showYesNoDialog(
+        return failure.get()
+    }
+
+    private fun confirmDiscard(failure: Throwable): Boolean {
+        val message = failure.cause?.message ?: "The drawing could not be saved before closing."
+        return Messages.showYesNoDialog(
             project, "$message\n\nClose and discard unsaved changes?", "Unable to Save Drawing",
             "Discard Changes", "Keep Editing", Messages.getWarningIcon(),
         ) == Messages.YES
-        if (closeAllowed) cancelPendingFrontendScene()
-        return closeAllowed
     }
 
     private fun loadFrontend() {
