@@ -44,16 +44,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.2.12 - 2026-09-19</h3>
+        <h3>0.2.13 - 2026-10-31</h3>
         <ul>
-            <li>Open, edit, and save <code>.excalidraw.svg</code> and <code>.excalidraw.png</code> files, including drawings created in VS Code.</li>
-            <li>Automatically save SVG and PNG edits, keeping the rendered image and embedded scene data together in one file ready to include in Markdown.</li>
-            <li>Create SVG and PNG drawings from the New menu.</li>
-            <li>Convert an existing <code>.excalidraw</code> drawing by renaming it to <code>.excalidraw.svg</code> or <code>.excalidraw.png</code>, then opening and saving it.</li>
-            <li>Finish pending image saves before closing a drawing or project, and show errors with retry or discard options when saving fails.</li>
-            <li>Protect unsaved PNG edits from conflicting changes on disk and reject images without embedded Excalidraw data.</li>
-            <li>Preserve normal IDE handling of ordinary SVG and PNG files.</li>
-            <li>Update frontend dependencies, Kotlin, Gradle, and IntelliJ Platform build dependencies; use the JCEF-enabled JetBrains Runtime for compilation.</li>
+            <li>Update frontend and plugin build dependencies to incorporate current security fixes, including patched DOMPurify and KaTeX versions.</li>
+            <li>Extend dependency security audits to include development tools.</li>
         </ul>
     ]]></change-notes>
 
